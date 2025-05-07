@@ -9,6 +9,7 @@ from time import time, sleep
 # # from SAC.sac import SAC
 from environments.double_ring import DoubleRing
 
+
 # ======================================== Other Modules =========================================
 import os
 import argparse
@@ -48,12 +49,16 @@ TASK = args.task
 EXPERT_PATH = 'datasets/dataset_{}.npz'.format(ENV_NAME)
 UNCERTAINTY = True if args.eval_mode == 'shifted' else False
 RENDERING = True if args.rendering == 'render' else False
-
 av_id = 'AV_1'
 
-# ========== Test SUMO
-# Initialise environment
+# ========== Initialise environment
 env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)
-state = env.reset(veh_id=av_id)
-print(state)
-env.close()
+
+# ========== Check whether the dataset is exists ?
+dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset'.format(ENV_NAME)
+if os.path.isfile(dataset_path):
+    # Load the dataset
+    dataset = np.load(dataset_path)
+else:
+    # Create a new dataset
+    ...
