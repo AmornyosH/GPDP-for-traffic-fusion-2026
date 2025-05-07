@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<routes>
+    <!-- IDM Model -->
+    <!-- Non Controlled-->
+    <!-- lcStrategic=-1.0 to prohibit the lane changing for IDM model -->
+    <vType id="IDM"
+    accel="1.0" 
+    decel="1.5" 
+    tau="1.0"
+    minGap="2.0" 
+    maxSpeed="10" 
+    speedFactor="1.0" 
+    speedDev="0.1" 
+    sigma="0.2" 
+    length="5" 
+    impatience="0.5"
+    delta="4"
+    carFollowModel='IDM'
+    laneChangeModel='LC2013'
+    lcStrategic="1.0"
+    lcCooperative="1.0"
+    lcCooperativeSpeed="1.0"
+    lcSpeedGain="1.0"
+    lcKeepRight="1.0"
+    color="255,255,255"/>
+
+    <!-- Controlled -->
+    <vType id="rl_agent"
+    accel="0.5" 
+    decel="0.5" 
+    tau="1.0"
+    minGap="2.0" 
+    maxSpeed="10" 
+    speedFactor="1.0" 
+    speedDev="0.1" 
+    sigma="0" 
+    length="5" 
+    impatience="0.5"
+    delta="4"
+    carFollowModel='IDM'
+    laneChangeModel='LC2013'
+    lcStrategic="1.0"
+    lcCooperative="1.0"
+    lcPushy="1.0"
+    lcImpatience="1.0"
+    lcKeepRight="1.0"
+    color="255,0,0"/>
+
+    <!-- Total 1 routes -->
+    <route id="0" edges="right left"/>
+
+</routes>
