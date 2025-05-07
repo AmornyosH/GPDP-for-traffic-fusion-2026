@@ -60,9 +60,12 @@ class DoubleRing:
         
     def reset(self, veh_id:str=None):
         '''
-        Add the AV to the environment (SUMO) and return initial observation (s_0). \\
-        Arguments: Vehicle's ID (veh_id) \\
-        Returns: Initial observation (o_0), current_timestep (step)
+        Add the AV to the environment (SUMO) and perform run-in steps, which contain adding 
+        all vehicles to the environment, and warming up, which allows the congestion to occur. 
+        This method will return initial observation of given vehicle (o_0). 
+        
+        Arguments : Vehicle's ID (veh_id) 
+        Returns : Initial observation (o_0)
         '''
         # Reset the environment and return the initial state s_0 ~ d(s_0). 
         self.start()
@@ -219,3 +222,77 @@ class DoubleRing:
         _truncrated = False
         return _next_state, _reward, _terminated, _truncrated
         ...
+
+    # Reward Function Method
+    def rewardFunction(self, n_veh:int, noise:bool=False):
+        # Define hyperparameters
+        _sum_speed = 0  # Reset sum_speed (For global objective)
+        _num_convolute = 5  # Convolution kernel size (1-D) (Used for computing running mean/std)
+        _gamma = 0.99
+        # Get next state first
+        _next_state = self.getState(noise)
+        
+        # Check for the reward configuration,
+        # ------ Alex Bayen's Paper ------
+        if self.reward_config == 'original':
+            # Derive Avg Speed
+            for c in range(n_veh-1):
+                _sum_speed += traci.vehicle.getSpeed(vehID=str(c))
+            avg_speed = (_sum_speed + _next_state[0]) / n_veh
+            # Check reward objective
+            if self.reward_objective == 'greedy':
+                # Using the greedy objective since it might be feasible in real-world. (Just my assumption)
+                # Reward = AV's speed (Greedy objective)
+                reward = _next_state[0]  
+            elif self.reward_objective == 'global': 
+                # Reward = All vehicles average speed (Global objective)
+                reward = avg_speed
+            # Append Reward
+            self.reward_append.append(reward)
+
+            # Append Accumalated Reward
+            self.accum_reward = (_gamma * self.accum_reward) + reward
+            self.accum_reward_append.append(self.accum_reward)
+
+            # Compute running mean/std
+            if len(self.reward_append) <= _num_convolute*2:
+                mean_t = np.mean(self.reward_append[0:len(self.reward_append)])
+                std_t = np.std(self.accum_reward_append[0:len(self.reward_append)])
+            else:
+                m = len(self.reward_append)-_num_convolute//2
+                mean_t = np.mean(self.reward_append[0+m:m+_num_convolute])
+                std_t = np.std(self.accum_reward_append[0+m:_num_convolute+m])
+            
+            # Normalise variance of reward 
+            norm_reward = (reward - mean_t) / (std_t + 1e-08)
+
+        # ------ My Modified Reward Fn ------
+        elif self.reward_config == 'my_reward':
+            # ------ Greed Objective -------
+            if self.reward_objective == 'greedy':
+                reward = _next_state[0]  # Get AV's speed.
+            # # ------ Global Objective ------
+            elif self.reward_objective == 'global':
+                # reward = avg_speed
+                reward = (_next_state[0]+_next_state[2]+_next_state[4]+_next_state[6]+_next_state[8])/5
+            # Append Reward
+            self.reward_append = np.append(self.reward_append, reward)
+            # Derive running mean
+            kernel_pos = len(self.reward_append) - _num_convolute
+            if kernel_pos <= _num_convolute:
+                mean_t = np.mean(self.reward_append[0:_num_convolute])
+            else:
+                mean_t = np.mean(self.reward_append[0+kernel_pos : _num_convolute+kernel_pos])
+            # Get distance penalty
+            # This is the penalty when the av is too far behind from the leading vehicle.
+            # dis_penalty = [0.2, 1]  ('1' means that the av is in the perfect clearance.)
+            # dis_penalty = 1 - ((next_state[3] - self.min_gap)/self.lead_dist)
+            dis_penalty = 1  # Try fix value first (No distance penalty).
+            # Normalised the reward
+            norm_reward = (mean_t / self.max_speed) * dis_penalty
+        else:
+            print('Unknown reward configuration.({:s}) Please try again.'.format(self.reward_config))
+            exit()  # Terminate the script.
+
+        # Return tuples
+        return norm_reward, _next_state

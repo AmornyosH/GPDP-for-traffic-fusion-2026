@@ -22,7 +22,8 @@ sns.set_theme()
 # ======================================= Local Functions ========================================
 def addArguments(parser):
     parser.add_argument('--env', default='simple_sine', help='Environment: ["simple_sine", "Walker2d-v5"], default:"simple_sine"')
-    parser.add_argument('--alg', default="GPDQ", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
+    parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
+    parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='training', help='Task: ["training", "testing"], default:training')
     parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
@@ -34,24 +35,25 @@ def setGlobalSeed(seed:int):
     torch.manual_seed(seed)
 
 # ====================================== Main Program Start ======================================
-seed = 2203
+seed = 0
 setGlobalSeed(seed)
-
-parser = argparse.ArgumentParser(description='SGDP (Neurips2025) PyTorch Args')
+parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_NNLS PyTorch Args')
 addArguments(parser)
 args = parser.parse_args()
 
 # ========== Global constants
 ENV_NAME = args.env
+NUM_VEH = int(args.density)
 TASK = args.task
 EXPERT_PATH = 'datasets/dataset_{}.npz'.format(ENV_NAME)
-RENDERING = True if args.rendering == 'render' else False
 UNCERTAINTY = True if args.eval_mode == 'shifted' else False
+RENDERING = True if args.rendering == 'render' else False
 
 av_id = 'AV_1'
 
 # ========== Test SUMO
 # Initialise environment
-env = DoubleRing(num_veh=50, render=RENDERING)
+env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)
 state = env.reset(veh_id=av_id)
+print(state)
 env.close()
