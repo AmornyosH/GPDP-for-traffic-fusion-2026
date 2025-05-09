@@ -8,6 +8,8 @@ from time import time, sleep
 # from Diffusion_QL.Diffusion_QL import DiffusionQL
 # # from SAC.sac import SAC
 from environments.double_ring import DoubleRing
+from dataset_creation import datasetCreation
+from agents.IDM import IDM
 
 
 # ======================================== Other Modules =========================================
@@ -17,8 +19,6 @@ import random
 import torch
 CUDA = torch.cuda.is_available()
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set_theme()
 
 # ======================================= Local Functions ========================================
 def addArguments(parser):
@@ -36,7 +36,7 @@ def setGlobalSeed(seed:int):
     torch.manual_seed(seed)
 
 # ====================================== Main Program Start ======================================
-seed = 0
+seed = 2203
 setGlobalSeed(seed)
 parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_NNLS PyTorch Args')
 addArguments(parser)
@@ -51,8 +51,11 @@ UNCERTAINTY = True if args.eval_mode == 'shifted' else False
 RENDERING = True if args.rendering == 'render' else False
 av_id = 'AV_1'
 
-# ========== Initialise environment
+# ========== Create environment object
 env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)
+
+# ========== Create IDM agent object
+idm_agent = IDM(load=False, params_dict=env.params_dict, datasets=None, id='my_IDM')
 
 # ========== Check whether the dataset is exists ?
 dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset'.format(ENV_NAME)
@@ -61,4 +64,9 @@ if os.path.isfile(dataset_path):
     dataset = np.load(dataset_path)
 else:
     # Create a new dataset
-    ...
+    dataset = datasetCreation(env=env, num_data=10**5)
+    # # Checking
+    # plt.scatter(dataset['actions'][:, 0], dataset['actions'][:, 1])  # Show action distributions.
+    # # plt.plot(np.arange(len(dataset['rewards'])), dataset['rewards'])  # Show reward curve.
+    # plt.show()
+    

@@ -27,14 +27,14 @@
 
     <!-- Controlled -->
     <vType id="my_AV"
-    accel="0.5" 
-    decel="0.5" 
+    accel="1.0" 
+    decel="1.5" 
     tau="1.0"
     minGap="2.0" 
     maxSpeed="10" 
     speedFactor="1.0" 
     speedDev="0.1" 
-    sigma="0" 
+    sigma="0.2" 
     length="5" 
     impatience="0.5"
     delta="4"
