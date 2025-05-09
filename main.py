@@ -64,9 +64,11 @@ if os.path.isfile(dataset_path):
     dataset = np.load(dataset_path)
 else:
     # Create a new dataset
-    dataset = datasetCreation(env=env, num_data=10**5)
-    # # Checking
+    dataset = datasetCreation(env=env, num_data=2*(10**4))
+    print(dataset['truncrated'][9999])
+    # Checking
     # plt.scatter(dataset['actions'][:, 0], dataset['actions'][:, 1])  # Show action distributions.
-    # # plt.plot(np.arange(len(dataset['rewards'])), dataset['rewards'])  # Show reward curve.
-    # plt.show()
+    # plt.plot(np.arange(len(dataset['rewards'])), dataset['rewards'])  # Show reward curve.
+    plt.plot(np.arange(len(dataset['truncrated'])), dataset['truncrated'])
+    plt.show()
     

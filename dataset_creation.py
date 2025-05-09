@@ -2,6 +2,7 @@ from agents.IDM import IDM
 import numpy as np
 
 def datasetCreation(env:object, num_data:int):
+    horizon = env.params_dict['horizon']
     # Initialise IDM vehicle
     idm_agent = IDM(load=False, params_dict=env.params_dict, datasets=None, id='my_IDM')
 
@@ -20,20 +21,22 @@ def datasetCreation(env:object, num_data:int):
         _truncrated = False
         _termination = False
         _accum_reward = 0
-        _step = 0
 
         # Agent observation initial state
         _observation = idm_agent.getObservation()
 
         # Loop
-        for t in range(env.params_dict['horizon']):
+        for t in range(horizon):
             # Agent take action
             _action = idm_agent.actionPerform(state=_observation)
 
             # Take a step in the environment and observes termination. 
             _next_observation, _reward, _truncrated, _termination = env.step(veh=idm_agent)
             _accum_reward += _reward
-            _step += 1
+            # Check if this is the final timestep.
+            if t+1 >= horizon:
+                _truncrated = True
+                _termination = True # Set termination true just for now.
 
             # Storing transitions
             observations_buffer.append(_observation)
@@ -55,7 +58,7 @@ def datasetCreation(env:object, num_data:int):
         # Print summary status.
         print(f'{env.env_tag}', f'{idm_agent.veh_tag}', 'Trajectory completed!', 
                                                         ', Avg_raw_reward: ', _accum_reward, 
-                                                        ', Horizon: ', _step)
+                                                        ', Horizon: ', t+1)
 
     # Contruct dataset dictionary.
     _dataset = {'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
