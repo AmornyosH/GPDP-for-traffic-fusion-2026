@@ -16,7 +16,8 @@ class IDM:
         self.load = load
         self.veh_id = id
         self.veh_type = 'IDM'
-        self.veh_tag = '(IDM) ---------->'
+        self.veh_tag = '(IDM) ----->'
+        self.veh_caution_tag = '(IDM) !!!!!>'
         self.sumo_time_step = params_dict['time_step']  # sumo time step
         self.env_name = params_dict['environment']
         self.num_lane = params_dict['num_lane']
@@ -186,7 +187,8 @@ class IDM:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
         return action_sample
 
-    def getNextObsAndReward(self, noise:bool=False):
+    # Next Observation and Raw reward Method
+    def getNextObsAndReward(self, noise:bool=False, scaled:bool=True):
         # Get next state first
         _next_state = self.getObservation(noise)
 
@@ -211,9 +213,13 @@ class IDM:
             # Which contains only 5 vehicles, including self speed.
             _reward = (_next_state[0]+_next_state[2]+_next_state[4]+_next_state[6]+_next_state[8])/5
         
+        # If the reward needs to be scaled... (Default = True)
+        if scaled:
+            _reward /= self.max_speed
+
         return _next_state, _reward
 
-    # Reward Function Method
+    # Normalising Reward Function Method
     def normRewardFunction(self, noise:bool=False):
         # Storages Reset Method
         def _resetStorages():

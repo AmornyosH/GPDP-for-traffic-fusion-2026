@@ -15,11 +15,13 @@ class DoubleRing:
     def __init__(self, render:bool=False, num_veh:int=44):
         # Initialise Environment's Parameters
         self.env_name = 'double_ring'
-        self.env_tag = '(Double_Ring) ---------->'
-        self.caution_tag = '(Double_Ring) !!!!!!!!!!>'
+        self.env_tag = '(Double_Ring) ----->'
+        self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
-        self.num_veh = num_veh
-
+        self.max_num_veh = num_veh
+        self.num_veh_config = [40, 42, 44, 46, 48]
+        self.veh_id_list = []  # Vehicle's id list.
+    
         # Initialise SUMO
         # ========== Initial command for opening the sumo interface.
         self.sumo_binary = checkBinary('sumo' if not render else 'sumo-gui')
@@ -40,6 +42,7 @@ class DoubleRing:
         print(f'{self.env_tag}', 'Lane_id: ', self.lane_id)
 
         self.params_dict = self.paramsDict()
+        self.prev_depart_lane_index = self.params_dict['default_depart_lane_index']
 
     def paramsDict(self):
             return {'environment': self.env_name,
@@ -57,7 +60,8 @@ class DoubleRing:
                     'reward_config': 'original', 
                     'reward_objective': 'greedy',
                     'num_lane': 2, 
-                    'num_veh': self.num_veh, 
+                    'default_depart_lane_index': 0,
+                    'num_veh': self.max_num_veh, 
                     }
 
     def reset(self, veh:object):
@@ -72,21 +76,29 @@ class DoubleRing:
         # Reset the environment and return the initial state s_0 ~ d(s_0). 
         self.start()
         _step = 0  # Initialise step counter
-
+        self.veh_id_list = []  # Reset veh_id list.
+        
         # !!!!!!!!!! Check whether the vehicle's id is provided ?
         if veh.veh_id is None:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=0)
+        _depart_lane = np.random.choice(self.lane_id)
+        traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, 
+                          departLane=_depart_lane)
+        self.veh_id_list.append(veh.veh_id)
         traci.simulationStep() 
         _step += 1
 
         # =================================== Run-in steps start ===================================
         # Run-in steps until all vehicles have been deployed.
+        # Determine number of vehicle
+        _total_num_veh = np.random.choice(self.num_veh_config)  # Using random to ensure that all algorithms will experience the same conditions.
+        
         # Generate Non-Controlled Vehicles in the simulation
-        for i in range(self.num_veh-1):
+        for i in range(_total_num_veh-1):
             traci.vehicle.add(vehID=i, routeID=self.route_id, typeID='IDM', departLane="allowed")  # Add vehicle into the simulation in another lane
+            self.veh_id_list.append(str(i))  # Store veh_id into the list.
             traci.vehicle.setSpeed(vehID=i, speed=0.5)  # Slow every vehicle in the run-in steps
             traci.vehicle.setLaneChangeMode(i, 0b000000000000)  # Prohibit lane change to the IDM vehicles
         traci.simulationStep()  # Take 1st simulation step to prevent below condition to be ignored.
@@ -100,7 +112,7 @@ class DoubleRing:
             _step += 1 # Assigned check point of time for run-in time.
 
         # `````````` After all vehicle have been departed, set the speed control back to SUMO configuration.
-        for i in range(self.num_veh-1):
+        for i in range(_total_num_veh-1):
             traci.vehicle.setSpeed(vehID=i, speed=-1)
         traci.vehicle.setSpeed(vehID=veh.veh_id, speed=-1)
         traci.simulationStep()
@@ -128,8 +140,12 @@ class DoubleRing:
     def close(self):
         traci.close()
 
-    def getEnvState(self, noise=False):
-        ...
+    def getState(self, noise=False):
+        # The state of the environment is a vector of speed of all vehicles.
+        _state = []
+        for i in self.veh_id_list:
+            _state.append(traci.vehicle.getSpeed(vehID=str(i)))
+        return _state
 
     def assignActions(self, action):
         # Acceleration

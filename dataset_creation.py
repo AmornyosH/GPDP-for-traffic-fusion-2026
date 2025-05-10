@@ -57,8 +57,11 @@ def datasetCreation(env:object, num_data:int):
 
         # Print summary status.
         print(f'{env.env_tag}', f'{idm_agent.veh_tag}', 'Trajectory completed!', 
-                                                        ', Avg_raw_reward: ', _accum_reward, 
-                                                        ', Horizon: ', t+1)
+                                                        ', Avg_raw_reward: ', round(_accum_reward, 2),
+                                                        ', Num_vehicles: ', len(env.veh_id_list), 
+                                                        ', Depart_lane: ', _observation[1],
+                                                        ', Dataset_size: ', len(observations_buffer))
+        
 
     # Contruct dataset dictionary.
     _dataset = {'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
