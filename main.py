@@ -13,6 +13,7 @@ from agents.IDM import IDM
 
 
 # ======================================== Other Modules =========================================
+from sys import platform
 import os
 import argparse
 import random
@@ -103,7 +104,10 @@ if __name__ == '__main__':
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # ========== The dataset or replay buffers are required to intialise the RL agent. 
-    dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset.npz'.format(ENV_NAME)
+    if platform == 'linux':
+        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # Linux
+    elif platform == 'win32':
+        dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For Windows
     dataset = getDataset(dataset_path)
 
 
