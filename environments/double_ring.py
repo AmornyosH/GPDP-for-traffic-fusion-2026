@@ -64,7 +64,7 @@ class DoubleRing:
                     'num_veh': self.max_num_veh, 
                     }
 
-    def reset(self, veh:object):
+    def reset(self, veh:object, num_veh:int=None):
         '''
         Add the AV to the environment (SUMO) and perform run-in steps, which contain adding 
         all vehicles to the environment, and warming up, which allows the congestion to occur. 
@@ -83,9 +83,9 @@ class DoubleRing:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        _depart_lane = np.random.choice(self.lane_id)
-        traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, 
-                          departLane=_depart_lane)
+        _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        self.prev_depart_lane_index = _depart_lane
+        traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=_depart_lane)
         self.veh_id_list.append(veh.veh_id)
         traci.simulationStep() 
         _step += 1
@@ -93,8 +93,11 @@ class DoubleRing:
         # =================================== Run-in steps start ===================================
         # Run-in steps until all vehicles have been deployed.
         # Determine number of vehicle
-        _total_num_veh = np.random.choice(self.num_veh_config)  # Using random to ensure that all algorithms will experience the same conditions.
-        
+        if num_veh is None:
+            _total_num_veh = np.random.choice(self.num_veh_config)  # Using random to ensure that all algorithms will experience the same conditions.
+        else:
+            _total_num_veh = num_veh
+
         # Generate Non-Controlled Vehicles in the simulation
         for i in range(_total_num_veh-1):
             traci.vehicle.add(vehID=i, routeID=self.route_id, typeID='IDM', departLane="allowed")  # Add vehicle into the simulation in another lane

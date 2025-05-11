@@ -12,7 +12,7 @@ import torch
 from utilities import my_utilities as my_utils
 
 class IDM:
-    def __init__(self, load:bool, params_dict:dict, datasets:dict=None, id='AV'):
+    def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV'):
         self.load = load
         self.veh_id = id
         self.veh_type = 'IDM'
@@ -171,6 +171,9 @@ class IDM:
     
     # Action Performing Method
     def actionPerform(self, state, s_print:bool=False, lane_id:int=None):
+        # IDM agent does not need to perform any action. 
+        # The SUMO will automatically do all the work. 
+        # Here, we just extract those actions from SUMO and return to keep them in replay buffer. 
         action_long = traci.vehicle.getAcceleration(vehID=self.veh_id)
         action_lat = traci.vehicle.getLaneIndex(vehID=self.veh_id) if lane_id is None else lane_id
         action_sample = self.actionEncoding(action_long, action_lat)

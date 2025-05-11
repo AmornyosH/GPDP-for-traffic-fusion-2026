@@ -1,10 +1,12 @@
 from agents.IDM import IDM
+from agents.RandomAV import RandomAV
 import numpy as np
 
 def datasetCreation(env:object, num_data:int):
     horizon = env.params_dict['horizon']
-    # Initialise IDM vehicle
-    idm_agent = IDM(load=False, params_dict=env.params_dict, datasets=None, id='my_IDM')
+    # Initialise vehicle's objects
+    idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')
+    random_agent = RandomAV(load=False, params_dict=env.params_dict, dataset=None, id='my_Random')
 
     # Initialise MDP transitions
     observations_buffer = []
@@ -13,25 +15,35 @@ def datasetCreation(env:object, num_data:int):
     next_observation_buffer = []
     truncrated_buffer = []
     termination_buffer = []
+    trajectory_count = 0  # Trajectory counter
+    # current_agent = 'IDM' # Default current agent is IDM.
 
     # Start
     while len(observations_buffer) < num_data:
+        # Select the agent
+        # We need to select the agent before reset the env. 
+        if len(observations_buffer) < (num_data // 2):
+            # Start with IDM
+            agent = idm_agent
+        else:
+            agent = random_agent
+
         # Initialise env.
-        _ = env.reset(veh=idm_agent)
+        _ = env.reset(veh=agent, num_veh=env.num_veh_config[int(trajectory_count % len(env.num_veh_config))])
         _truncrated = False
         _termination = False
         _accum_reward = 0
 
         # Agent observation initial state
-        _observation = idm_agent.getObservation()
+        _observation = agent.getObservation()
 
         # Loop
         for t in range(horizon):
             # Agent take action
-            _action = idm_agent.actionPerform(state=_observation)
+            _action = agent.actionPerform(state=_observation)
 
             # Take a step in the environment and observes termination. 
-            _next_observation, _reward, _truncrated, _termination = env.step(veh=idm_agent)
+            _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
             _accum_reward += _reward
             # Check if this is the final timestep.
             if t+1 >= horizon:
@@ -52,17 +64,19 @@ def datasetCreation(env:object, num_data:int):
             # Assign new state
             _observation = _next_observation
         
+        # Count the trajectory
+        trajectory_count += 1
+
         # Close the SUMO connection. (To not show error message)
         env.close()
 
         # Print summary status.
-        print(f'{env.env_tag}', f'{idm_agent.veh_tag}', 'Trajectory completed!', 
-                                                        ', Avg_raw_reward: ', round(_accum_reward, 2),
-                                                        ', Num_vehicles: ', len(env.veh_id_list), 
-                                                        ', Depart_lane: ', _observation[1],
-                                                        ', Dataset_size: ', len(observations_buffer))
+        print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
+                                                    ', Avg_raw_reward: ', round(_accum_reward, 2),
+                                                    ', Num_vehicles: ', len(env.veh_id_list), 
+                                                    ', Depart_lane: ', _observation[1],
+                                                    ', Dataset_size: ', len(observations_buffer))
         
-
     # Contruct dataset dictionary.
     _dataset = {'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
                 'actions': np.vstack(actions_buffer).reshape(num_data, env.params_dict['action_dim']), 

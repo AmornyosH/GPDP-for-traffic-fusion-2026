@@ -8,9 +8,7 @@ from time import time, sleep
 # from Diffusion_QL.Diffusion_QL import DiffusionQL
 # # from SAC.sac import SAC
 from environments.double_ring import DoubleRing
-from dataset_creation import datasetCreation
-from agents.IDM import IDM
-
+from dataset_creation import dataset_creation
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -43,8 +41,7 @@ def getDataset(path:str):
             dataset = np.load(path)
         else:
             # Check if you want to override the previous dataset. 
-            print(f'{caution_tag}', 'The dataset is already existed. Do you want to override it ?')
-            _override_ans = input('')
+            _override_ans = input('{:s} The dataset is already existed. Do you want to override it ? '.format(caution_tag))
             if _override_ans == 'y' or _override_ans =='Y' or _override_ans =='yes' or _override_ans =='YES' or _override_ans =='Yes':
                 _dataset_creation_flag = True
             else:
@@ -60,11 +57,12 @@ def getDataset(path:str):
             _dataset_creation_flag = True
         
     if _dataset_creation_flag:
-        # Ask for the number of data points. 
-        print('{:s} Please input the number of data points...'.format(main_tag))
-        _num_data = int(input(''))
+        # # Ask for the number of data points. 
+        # print('{:s} Please input the number of data points...'.format(main_tag))
+        # _num_data = int(input(''))
+        _num_data = int(input('{:s} Please input the number of data points... '.format(main_tag)))
         # Create a new dataset.
-        dataset = datasetCreation(env=env, num_data=_num_data)
+        dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data)
 
         # Saving the dataset.
         np.savez(path, dataset)
@@ -100,7 +98,7 @@ if __name__ == '__main__':
 
     # ========== Create objects
     env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)  # Environment object
-    idm_agent = IDM(load=False, params_dict=env.params_dict, datasets=None, id='my_IDM')  # IDM agent object (used for create the dataset)
+    # idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')  # IDM agent object (used for create the dataset)
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # ========== The dataset or replay buffers are required to intialise the RL agent. 
@@ -108,6 +106,7 @@ if __name__ == '__main__':
         dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # Linux
     elif platform == 'win32':
         dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For Windows
+    # Get the dataset
     dataset = getDataset(dataset_path)
 
 
