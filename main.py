@@ -102,6 +102,7 @@ if __name__ == '__main__':
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # ========== The dataset or replay buffers are required to intialise the RL agent. 
+    # !!!!!!!!!! For the dataset path, I will change to desktop location when I publish this online. 
     if platform == 'linux':
         dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # Linux
     elif platform == 'win32':
