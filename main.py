@@ -66,7 +66,7 @@ def getDataset(path:str):
 
         # Saving the dataset.
         np.savez(path, dataset)
-
+        
         # Print Final status
         print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{path}')
 
@@ -76,7 +76,6 @@ def getDataset(path:str):
         # plt.plot(np.arange(len(dataset['truncrated'])), dataset['truncrated'])
         # plt.show()
     
-
 # ====================================== Main Program Start ======================================
 if __name__ == '__main__':
     seed = 2203
@@ -98,7 +97,6 @@ if __name__ == '__main__':
 
     # ========== Create objects
     env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)  # Environment object
-    # idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')  # IDM agent object (used for create the dataset)
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # ========== The dataset or replay buffers are required to intialise the RL agent. 
@@ -107,6 +105,8 @@ if __name__ == '__main__':
         dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # Linux
     elif platform == 'win32':
         dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For Windows
+    elif platform == 'darwin':
+        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For macOS
     # Get the dataset
     dataset = getDataset(dataset_path)
 
