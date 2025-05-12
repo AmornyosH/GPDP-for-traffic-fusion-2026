@@ -78,7 +78,8 @@ def datasetCreation(env:object, num_data:int):
                                                     ', Dataset_size: ', len(observations_buffer))
         
     # Contruct dataset dictionary.
-    _dataset = {'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
+    _dataset = {'num_sample': len(observations_buffer),
+                'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
                 'actions': np.vstack(actions_buffer).reshape(num_data, env.params_dict['action_dim']), 
                 'rewards': np.vstack(rewards_buffer).reshape(num_data, 1),
                 'next_observations': np.vstack(next_observation_buffer).reshape(num_data, env.params_dict['observation_dim']), 

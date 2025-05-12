@@ -2,13 +2,8 @@ import numpy as np
 from time import time, sleep
 
 # ========================================= My Modules ===========================================
-# from GPDP_v1.GPDP_v1 import GaussianProcessDiffusionPolicy
-# from GPDQ.GPDQ import GaussianProcessDiffusionQlearning
-# from SGDP.SGDP import StochasticGaussianprocessDiffusionPolicy
-# from Diffusion_QL.Diffusion_QL import DiffusionQL
-# # from SAC.sac import SAC
 from environments.double_ring import DoubleRing
-from dataset_creation import dataset_creation
+from utilities import my_utilities, offline_training, dataset_creation
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -20,25 +15,12 @@ CUDA = torch.cuda.is_available()
 import matplotlib.pyplot as plt
 
 # ======================================= Local Functions ========================================
-def addArguments(parser):
-    parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
-    parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
-    parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
-    parser.add_argument('--task', default='training', help='Task: ["training", "testing", "dataset"], default:training')
-    parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
-    parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
-    parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
-
-def setGlobalSeed(seed:int):
-    random.seed(seed)
-    np.random.seed(seed=seed)
-    torch.manual_seed(seed)
-
 def getDataset(path:str):
     if os.path.isfile(path):
         if args.task != 'dataset':
             # Load the dataset
-            dataset = np.load(path)
+            dataset = np.load(path, allow_pickle=True)
+            _dataset_creation_flag = False
         else:
             # Check if you want to override the previous dataset. 
             _override_ans = input('{:s} The dataset is already existed. Do you want to override it ? '.format(caution_tag))
@@ -65,7 +47,7 @@ def getDataset(path:str):
         dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data)
 
         # Saving the dataset.
-        np.savez(path, dataset)
+        np.savez(path, **dataset)
         
         # Print Final status
         print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{path}')
@@ -75,16 +57,29 @@ def getDataset(path:str):
         # # plt.plot(np.arange(len(dataset['rewards'])), dataset['rewards'])  # Show reward curve.
         # plt.plot(np.arange(len(dataset['truncrated'])), dataset['truncrated'])
         # plt.show()
-    
+
+    return dataset
+
 # ====================================== Main Program Start ======================================
 if __name__ == '__main__':
+    # ========== Set global seed generator first. 
     seed = 2203
-    setGlobalSeed(seed)
-    parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_NNLS PyTorch Args')
-    addArguments(parser)
+    random.seed(seed)
+    np.random.seed(seed=seed)
+    torch.manual_seed(seed)
+
+    # ========== Define arguments parser. 
+    parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_ITS PyTorch Args')
+    parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
+    parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
+    parser.add_argument('--alg', default="SGDQ", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
+    parser.add_argument('--task', default='training', help='Task: ["training", "testing", "dataset"], default:training')
+    parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
+    parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
+    parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
     args = parser.parse_args()
 
-    # ========== Global constants
+    # ========== Define global constants
     ENV_NAME = args.env
     NUM_VEH = int(args.density)
     TASK = args.task
@@ -94,20 +89,42 @@ if __name__ == '__main__':
     av_id = 'AV_1'
     main_tag = '(main) ----->'
     caution_tag = '(main) !!!!!>'
+        # ---------- Define paths for each OS platform.
+        # !!!!!!!!!! I will change to desktop location when I publish this online. 
+    if platform == 'linux':
+        # Linux
+        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  
+        training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(args.alg, ENV_NAME) 
+    elif platform == 'win32':
+        # Windows
+        dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)  
+        training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
+    elif platform == 'darwin':
+        # macOS
+        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(ENV_NAME)  
+        training_record_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_{}_training_records'.format(args.alg, ENV_NAME)
 
     # ========== Create objects
     env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)  # Environment object
 
     # ========== Check whether the dataset/replay_buffers is exist ?
-    # ========== The dataset or replay buffers are required to intialise the RL agent. 
-    # !!!!!!!!!! For the dataset path, I will change to desktop location when I publish this online. 
-    if platform == 'linux':
-        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # Linux
-    elif platform == 'win32':
-        dataset_path = 'C:/Amornyos/PhD/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For Windows
-    elif platform == 'darwin':
-        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(ENV_NAME)  # For macOS
+    # !!!!!!!!!! The dataset or replay buffers are required to intialise the RL agent. 
     # Get the dataset
     dataset = getDataset(dataset_path)
 
-
+    # ========== Training (Offline)
+    if args.task == 'training':
+        # Ask whether which training option is preferred ?
+        _training_option = input('{:s} Please define training options ["offline", "online"]: '.format(main_tag))
+        if _training_option == 'offline':
+            # Go for offline training. 
+            _training_record = offline_training.offlineTraining(path=training_record_path, 
+                                                                env=env,
+                                                                alg=args.alg,
+                                                                cont=False, 
+                                                                dataset=dataset, 
+                                                                total_steps=args.gradient_step)
+            print(f'{main_tag}', 'Offline Training for', f'{args.alg}', 'is completed.')
+            print(f'{main_tag}', 'The training record is save at the location: ', f'{training_record_path}')
+            print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
+        
