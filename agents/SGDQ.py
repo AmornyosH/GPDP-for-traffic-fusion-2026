@@ -10,7 +10,8 @@ CUDA = torch.cuda.is_available()
 # ============================ Pytorch Related ============================
 
 # ================================== Others ==================================
-from utilities import MLP, my_utilities
+from utilities import MLP
+from utilities import miscellaneous as misc
 from time import time
 import numpy as np
 import os
@@ -22,6 +23,7 @@ class StochasticGaussianprocessDiffusionQlearning:
         self.STATE_DIM = int(params_dict['observation_dim'])
         self.ACTION_DIM = int(params_dict['action_dim'])
         
+        # Getting the dataset...
         if dataset is not None:
             self.NUM_SAMPLE = dataset['num_sample']
             # Initialise replay buffers
@@ -34,15 +36,19 @@ class StochasticGaussianprocessDiffusionQlearning:
             self.NUM_SAMPLE = 1e+06
             self.MINIBATCH_SIZE = 256
         
-        self.training_step_counter = 0
-        # Initialise Diffusion Model's Parameters
-        self.initialiseDiffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=5, dec_step=5)
-
         # Initialise Paths
         self.training_record_path = '{:s}/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ALG, self.ENV_CONFIG)
         self.training_record_2m_path = '{:s}/training_records/{:s}_{:s}_training_record_2m'.format(self.ALG, self.ALG, self.ENV_CONFIG)
         self.training_checkpoint_path = '{:s}/training_records/{:s}_{:s}_checkpoint'.format(self.ALG, self.ALG, self.ENV_CONFIG)
         self.evaluation_path = '{:s}/norm_eval_rewards_append.npz'.format(self.ALG)
+
+        # Initialise Training Parameters
+        self.training_step_counter = 0
+        self.norm_reward_training_append = []
+        self.best_norm_reward_training = 0
+
+        # Initialise Diffusion Model's Parameters
+        self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=5, dec_step=5)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -64,9 +70,6 @@ class StochasticGaussianprocessDiffusionQlearning:
             self.q_1_loss_append = []
             self.q_2_loss_append = []
             self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_INPUT_DIM, output_dim=self.ACTION_DIM)
-            # _load_beh = torch.load(self.training_record_path, map_location=torch.device('cpu' if not CUDA else 'cuda'))
-            # self.epsilon_beh = _load_beh['epsilon_beh']
-            # self.beh_training_record = _load_beh['beh_training_record']
             self.q_1 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.Q_INPUT_DIM, output_dim=1)
             self.q_2 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.V_INPUT_DIM, output_dim=1)
             # Initialise Target models
@@ -82,9 +85,6 @@ class StochasticGaussianprocessDiffusionQlearning:
             print('========== ({:s}) Try another answer. ("y" for yes (load existing one) or "n" for no (create new)).'.format(self.ALG))
             exit()
             
-        self.norm_reward_training_append = []
-        self.best_norm_reward_training = 0
-        
         # Declare optimizer for the networks (offline training)
         self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-04)
         self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-04)
@@ -119,7 +119,7 @@ class StochasticGaussianprocessDiffusionQlearning:
               ', Gradient steps: ', self.training_record*(self.NUM_SAMPLE//self.MINIBATCH_SIZE))
 
     # Diffusion model's parameters initialisation Method
-    def initialiseDiffusionParams(self, schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=10):
+    def diffusionParams(self, schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=10):
         # Intialise Diffusion Model Parameters
         self.DIFFU_STEPS = num_step
         self.DEC_DIFFU_STEPS = dec_step
@@ -134,10 +134,8 @@ class StochasticGaussianprocessDiffusionQlearning:
         self.DIFFU_MEAN = torch.tensor(0., dtype=torch.float32)
         self.DIFFU_VAR = torch.tensor(1., dtype=torch.float32)
         self.DIFFU_STD = torch.sqrt(self.DIFFU_VAR)
-        self.reverse_mean = 0.
-        self.reverse_cov = 0.
 
-        self.POS_EMB = my_utilities.sinPositionEncoding(seq_len=self.DIFFU_STEPS, dim=self.POS_DIM)
+        self.POS_EMB = misc.sinPositionEncoding(seq_len=self.DIFFU_STEPS, dim=self.POS_DIM)
 
         # ----- Derive the diffusion schedule
         # For the sake of simplicity, the order of the element in the array represents the forward process order.
@@ -167,16 +165,16 @@ class StochasticGaussianprocessDiffusionQlearning:
         self.alpha = torch.tensor(self.alpha, dtype=torch.float32)
         self.alpha_bar = torch.tensor(self.alpha_bar, dtype=torch.float32)
         self.POS_EMB = torch.tensor(self.POS_EMB, dtype=torch.float32)
-
+        
     # Best Trajectory Extraction Method
     def bestTrajExtraction(self, dataset:dict):
-        _num_samples = dataset['arr_0']
-        _state = dataset['arr_1']
-        _action = dataset['arr_2']
-        _reward = dataset['arr_3']
-        _next_state = dataset['arr_4']
-        _truncrated = dataset['arr_5']
-        _terminated = dataset['arr_6']
+        _num_samples = dataset['num_sample']
+        _state = dataset['observations']
+        _action = dataset['actions']
+        _reward = dataset['rewards']
+        _next_state = dataset['next_observations']
+        _truncrated = dataset['truncrated']
+        _terminated = dataset['termination']
         _accum_reward = 0
         _best_reward = 0
         _counter = 0
@@ -199,13 +197,13 @@ class StochasticGaussianprocessDiffusionQlearning:
 
         print('best_reward: ', _best_reward, ', first_idx: ', _first_idx, ', last_idx: ', _last_idx)
 
-        _best_dataset = ({'arr_0': len(_state[_first_idx:_last_idx]), 
-                          'arr_1': _state[_first_idx:_last_idx], 
-                          'arr_2': _action[_first_idx:_last_idx], 
-                          'arr_3': _reward[_first_idx:_last_idx], 
-                          'arr_4': _next_state[_first_idx:_last_idx], 
-                          'arr_5': _truncrated[_first_idx:_last_idx],
-                          'arr_6': _terminated[_first_idx:_last_idx]})
+        _best_dataset = ({'num_sample': len(_state[_first_idx:_last_idx]), 
+                          'observations': _state[_first_idx:_last_idx], 
+                          'actions': _action[_first_idx:_last_idx], 
+                          'rewards': _reward[_first_idx:_last_idx], 
+                          'next_observations': _next_state[_first_idx:_last_idx], 
+                          'truncrated': _truncrated[_first_idx:_last_idx],
+                          'termination': _terminated[_first_idx:_last_idx]})
 
         return _best_dataset
 

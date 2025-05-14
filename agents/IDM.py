@@ -9,7 +9,7 @@ from sumolib import checkBinary
 import numpy as np
 import torch
 
-from utilities import my_utilities as my_utils
+from utilities import miscellaneous as misc
 
 class IDM:
     def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV'):
@@ -126,11 +126,11 @@ class IDM:
         if not torch.is_tensor(inputs):
             inputs = torch.tensor(inputs, dtype=torch.float32)
         encoded_actions = torch.zeros([self.action_dim], dtype=torch.float32)
-        encoded_actions[0] = my_utils.rangeConversion(inputs[0], 
-                                                      new_min=self.min_action_space,
-                                                      new_max=self.max_action_space,
-                                                      old_min=self.min_accel,
-                                                      old_max=self.max_accel)
+        encoded_actions[0] = misc.rangeConversion(inputs[0], 
+                                                  new_min=self.min_action_space,
+                                                  new_max=self.max_action_space,
+                                                  old_min=self.min_accel,
+                                                  old_max=self.max_accel)
         if self.action_dim > 1:
             if inputs[1] == 0:
                 encoded_actions[1] = np.random.normal(loc=0.5, scale=0.05)
@@ -146,14 +146,14 @@ class IDM:
 
     # Action Decoding Method
     def actionDecoding(self, inputs):
-        decoded_actions = np.zeros([2 if self.lateral else 1], dtype=float)  # Long action + Lat action
+        decoded_actions = np.zeros([2 if self.lateral_action else 1], dtype=float)  # Long action + Lat action
         # If the environment has multiple lanes.
         if len(decoded_actions) > 1:
-            decoded_actions[0] = my_utils.rangeConversion(inputs[0],
-                                                          old_min=self.min_action_space,
-                                                          old_max=self.max_action_space,
-                                                          new_min=self.min_accel,
-                                                          new_max=self.max_accel)
+            decoded_actions[0] = misc.rangeConversion(inputs[0],
+                                                      old_min=self.min_action_space,
+                                                      old_max=self.max_action_space,
+                                                      new_min=self.min_accel,
+                                                      new_max=self.max_accel)
             if inputs[1] > 0.4 and inputs[1] < 0.6:
                 decoded_actions[1] = self.lane_id[0]
             elif inputs[1] < -0.4 and inputs[1] > -0.6:
@@ -162,11 +162,11 @@ class IDM:
                 decoded_actions[1] = self.getState()[1]
 
         else:
-            decoded_actions = my_utils.rangeConversion(inputs,
-                                                       old_min=self.min_action_space,
-                                                       old_max=self.max_action_space,
-                                                       new_min=self.min_accel,
-                                                       new_max=self.max_accel)
+            decoded_actions = misc.rangeConversion(inputs,
+                                                   old_min=self.min_action_space,
+                                                   old_max=self.max_action_space,
+                                                   new_min=self.min_accel,
+                                                   new_max=self.max_accel)
         return decoded_actions
     
     # Action Performing Method
