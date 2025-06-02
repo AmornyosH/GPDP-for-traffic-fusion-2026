@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from time import time
 
-from agents.SGDQ import StochasticGaussianprocessDiffusionQlearning
+from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Offline Training) ----->'
 CAUTION_TAG = '(Offline Training) !!!!!>'

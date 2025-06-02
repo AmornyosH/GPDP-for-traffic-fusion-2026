@@ -10,9 +10,11 @@ class mySVGP(torch.nn.Module):
         self.alg = 'svgp'
         self.env = params_dict['environment']
         self.params_dict = params_dict
-        self.num_sample = params_dict['gp_num_sample']
-        self.num_inducing = params_dict['gp_num_inducing']
-        self.x_dim = int(params_dict['state_dim'])
+        # self.num_sample = params_dict['gp_num_sample']
+        # self.num_inducing = params_dict['gp_num_inducing']
+        self.num_sample = params_dict['horizon']
+        self.num_inducing = int(params_dict['horizon'] / 10)
+        self.x_dim = int(params_dict['observation_dim'])
         self.y_dim = int(params_dict['action_dim'])
         self.training_record_path = '{}/training_records/{}_{}_{}_training_records.zip'.format(self.parent_alg, self.parent_alg, self.env, self.alg)
         self.training_checkpoint_path = '{}/training_records/{}_{}_{}_checkpoint.zip'.format(self.parent_alg, self.parent_alg, self.env, self.alg)
@@ -31,8 +33,8 @@ class mySVGP(torch.nn.Module):
             self.training_record = 0  # Training record counter
             # Initialise training data
             _start = 0
-            self.x_train = torch.tensor(dataset['arr_1'][0+_start:_start+self.num_sample], dtype=torch.float32)
-            self.y_train = torch.tensor(dataset['arr_2'][0+_start:_start+self.num_sample], dtype=torch.float32)
+            self.x_train = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample], dtype=torch.float32)
+            self.y_train = torch.tensor(dataset['actions'][0+_start:_start+self.num_sample], dtype=torch.float32)
             # Intialise inducing points (Let's fix it first.)
             self.z_train, self.indexes = self.getInitInducingPoints(x_train=self.x_train)
             # Create hyperparameters
@@ -85,6 +87,7 @@ class mySVGP(torch.nn.Module):
         '''
         X_1 = torch.tensor(X_1, dtype=torch.float32) if not torch.is_tensor(X_1) else X_1
         X_2 = torch.tensor(X_2, dtype=torch.float32) if not torch.is_tensor(X_2) else X_2
+        # print(X_1.size(), self.ell.size())
         kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1/self.ell, X_2/self.ell)**2)/2)
         if noise:
             # Noisy observation

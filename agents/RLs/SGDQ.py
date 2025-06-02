@@ -12,6 +12,7 @@ CUDA = torch.cuda.is_available()
 # ================================== Others ==================================
 from utilities import MLP
 from utilities import miscellaneous as misc
+from agents.GPs.SVGP import mySVGP
 from time import time
 import numpy as np
 import os
@@ -22,7 +23,7 @@ class StochasticGaussianprocessDiffusionQlearning:
         self.ENV_CONFIG = params_dict['environment']
         self.STATE_DIM = int(params_dict['observation_dim'])
         self.ACTION_DIM = int(params_dict['action_dim'])
-        
+
         # Getting the dataset...
         if dataset is not None:
             self.NUM_SAMPLE = dataset['num_sample']
@@ -99,7 +100,7 @@ class StochasticGaussianprocessDiffusionQlearning:
         # Uncomment out the selected gp model type...
         # best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
         best_dataset = dataset
-        # self.gp_model = my_svgp.mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
+        self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
 
     # Training Record Loading Method
     def loadTrainingRecord(self):
@@ -382,7 +383,7 @@ class StochasticGaussianprocessDiffusionQlearning:
 
             # Prepare data for diffusion learning
             rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[_batch_size])
-            encode_t_tensor = self.POS_EMB[rand_t]  # Retrieve
+            encode_t_tensor = self.POS_EMB[rand_t] 
             epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[_batch_size, self.ACTION_DIM])
             forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
             diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)

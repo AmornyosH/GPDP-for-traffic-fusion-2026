@@ -3,7 +3,7 @@ from time import time, sleep
 
 # ========================================= My Modules ===========================================
 from environments.double_ring import DoubleRing
-from utilities import my_utilities, offline_training, dataset_creation
+from utilities import offline_training, dataset_creation, evaluation
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -128,3 +128,11 @@ if __name__ == '__main__':
             print(f'{main_tag}', 'The training record is save at the location: ', f'{training_record_path}')
             print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
         
+    if args.task == 'testing':
+        _return = evaluation.sumoInteraction(env=env, 
+                                             num_veh=44, 
+                                             alg=args.alg, 
+                                             dataset=dataset)
+        print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')
+        print(f'{main_tag}', 'The return is ', f'{_return}', '.')
+        print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
