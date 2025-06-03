@@ -8,7 +8,7 @@ from agents.AV import AutonomousVehicle
 def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
-    if alg == 'SGDQ':
+    if alg == 'SGDP':
         agent = AutonomousVehicle(load=False, params_dict=env.params_dict, dataset=dataset, id='my_AV')
 
     # Initialise MDP transitions and others

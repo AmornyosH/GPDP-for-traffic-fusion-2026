@@ -11,7 +11,7 @@ import torch
 import random
 
 from utilities import miscellaneous as misc
-from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
+from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
 
 
 class AutonomousVehicle:
@@ -47,7 +47,7 @@ class AutonomousVehicle:
         self.accum_reward = 0  # Used in reward function.
 
         # Initialise High Level control algorithm 
-        self.controller = StochasticGaussianprocessDiffusionQlearning(params_dict=params_dict, dataset=dataset)
+        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset)
 
     # Observation Method
     def getObservation(self, noise=False):
@@ -180,6 +180,7 @@ class AutonomousVehicle:
         # Random agent will random actions both longitudinal and lateral.
         _pred = self.controller.predict(state=state, size=1, guide=True)
         _pred = self.actionDecoding(_pred.tolist()[0])
+        print(_pred)
         action_long = _pred[0]
         action_lat = _pred[1]
         # print('Random acc: ', action_long, ', Random lane: ', action_lat)

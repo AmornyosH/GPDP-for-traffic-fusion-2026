@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from time import time
 
+from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
 from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Offline Training) ----->'
@@ -9,13 +10,13 @@ CAUTION_TAG = '(Offline Training) !!!!!>'
 
 def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):
     # Initialise agent's object
-    if alg == 'SGDQ':
-        agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, ft=False)
+    if alg == 'SGDP':
+        agent = StochasticGaussianprocessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, ft=False)
 
     # Initialise parameters
     _steps = agent.training_step_counter
     _total_steps = total_steps
-    _epoch = int(_steps/agent.MINIBATCH_SIZE)
+    _epoch = agent.training_record
     _steps_per_epoch = int(_total_steps/agent.MINIBATCH_SIZE)
     _total_epochs = int(_total_steps/_steps_per_epoch)
 

@@ -7,28 +7,43 @@ class mySVGP(torch.nn.Module):
     def __init__(self, parent_alg:str, params_dict:dict, dataset:dict, cuda:bool=False):
         super().__init__()
         self.parent_alg = parent_alg
-        self.alg = 'svgp'
-        self.env = params_dict['environment']
+        self.ALG = 'svgp'
+        self.tag = '(GP) ----->'
+        self.caution_tag = '(GP) !!!!!>'
+        self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
         # self.num_sample = params_dict['gp_num_sample']
         # self.num_inducing = params_dict['gp_num_inducing']
-        self.num_sample = params_dict['horizon']
-        self.num_inducing = int(params_dict['horizon'] / 10)
+        self.num_sample = int(params_dict['horizon'] / 10)
+        self.num_inducing = 256
         self.x_dim = int(params_dict['observation_dim'])
         self.y_dim = int(params_dict['action_dim'])
-        self.training_record_path = '{}/training_records/{}_{}_{}_training_records.zip'.format(self.parent_alg, self.parent_alg, self.env, self.alg)
-        self.training_checkpoint_path = '{}/training_records/{}_{}_{}_checkpoint.zip'.format(self.parent_alg, self.parent_alg, self.env, self.alg)
+
+        # Initialise Paths
+        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS/training_records'):
+            print(f'{self.tag}', 'This is my PC. Saved the training records to a specific loaction.')
+            self.training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ENV_CONFIG)
+            self.training_checkpoint_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ENV_CONFIG)
+            self.evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_evaluation_result'.format(self.ALG, self.ENV_CONFIG)
+        else:
+            print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
+            import pathlib
+            DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
+            self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+
         self.cuda() if cuda else ...
 
         # Check for the training record file and the response from user...
         if os.path.isfile(self.training_record_path) is True:
-            print('========== ({:s}) There exists a training record for this agent. Do you wish to load the exist one ?'.format(self.alg))
-            _ans_1 = input('========== ({:s}) Press [y/n] and enter: '.format(self.alg))
+            print('========== ({:s}) There exists a training record for this agent. Do you wish to load the exist one ?'.format(self.ALG))
+            _ans_1 = input('========== ({:s}) Press [y/n] and enter: '.format(self.ALG))
         else:
             _ans_1 = 'n'
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':
-            print('========== ({:s}) Create new GP record and models!'.format(self.alg))
+            print('========== ({:s}) Create new GP record and models!'.format(self.ALG))
             self.mll_append = []  # Loss storage
             self.training_record = 0  # Training record counter
             # Initialise training data
@@ -45,28 +60,34 @@ class mySVGP(torch.nn.Module):
             self.q_var = torch.nn.Parameter(torch.ones([self.num_inducing, self.num_inducing]), requires_grad=True)  # Single covariance
 
         elif _ans_1 == 'y' or _ans_1=='Y' or _ans_1=='Yes' or _ans_1=='YES':
-            print('========== ({:s}) Load training record.'.format(self.alg))
+            print('========== ({:s}) Load training record.'.format(self.ALG))
             # Load training records
-            _training_records = torch.load(self.training_record_path, map_location=torch.device('cuda' if cuda else 'cpu'))
-            self.mll_append = _training_records['loss_append']  # Loss append
-            self.training_record = _training_records['training_record']  # Training record counter
-            _state_dict = _training_records['state_dict']
-            self.x_train = _training_records['x_train']
-            self.y_train = _training_records['y_train']
-            self.z_train = _training_records['z_train']
+            _training_records = torch.load(self.training_record_path, weights_only=False, map_location=torch.device('cuda' if cuda else 'cpu'))
+            self.mll_append = _training_records['gp_loss_append']  # Loss append
+            self.training_record = _training_records['gp_training_record']  # Training record counter
+            _state_dict = _training_records['gp_state_dict']
+            self.x_train = _training_records['gp_x_train']
+            self.y_train = _training_records['gp_y_train']
+            self.z_train = _training_records['gp_z_train']
             self.sigma_n = torch.nn.Parameter(_state_dict['sigma_n'], requires_grad=True)
             self.ell = torch.nn.Parameter(_state_dict['ell'], requires_grad=True)
             self.q_mean = torch.nn.Parameter(_state_dict['q_mean'], requires_grad=True)
             self.q_var = torch.nn.Parameter(_state_dict['q_var'], requires_grad=True)
             self.eval()
         else:
-            print('========== ({:s}) Try another answer. ("y" for yes (create new) or "n" for no (load existing one)).'.format(self.alg))
+            print('========== ({:s}) Try another answer. ("y" for yes (create new) or "n" for no (load existing one)).'.format(self.ALG))
             exit()
 
         # Initialised training kernels (K, K_inv) (For evaluation).
         self.sigma_p = torch.tensor(1.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
+
+        print(f'{self.tag}', 'GP Initialised !')
+        print(f'{self.tag}', 'Num_Training_Sample: ', self.num_sample)
+        print(f'{self.tag}', 'Num_Inducing: ', self.num_inducing)
+        print(f'{self.tag} sigma_n: {self.sigma_n}')
+        print(f'{self.tag} ell: {self.ell}')
 
     def getInitInducingPoints(self, x_train):
         _indexes = np.linspace(start=0, stop=len(x_train), num=self.num_inducing, endpoint=False)
@@ -117,11 +138,12 @@ class mySVGP(torch.nn.Module):
 
     def myTraining(self, total_epoch:int, ft:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
-        _batch_size = self.params_dict['gp_batch_size']
+        _batch_size = self.num_inducing
         _gradient_step = int(self.num_sample//_batch_size)  
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var], lr=1e-02)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-02)
         _training_record = 0
+        _elbo_append = []
 
         while _training_record < total_epoch:
             _start_time = time()
@@ -172,8 +194,8 @@ class mySVGP(torch.nn.Module):
                 _cov_optimizer.step()
                 _ind_optimizer.step()
 
+                _elbo_append.append(_elbo.tolist())
                 self.mll_append.append(_elbo.tolist())
-                # self.q_var = torch.clip(self.q_var, min=0.05)
 
             _training_record += 1
         
@@ -183,12 +205,12 @@ class mySVGP(torch.nn.Module):
             #       ', Obs_var: ', round(self.sigma_n.tolist(), 4),
             #       ', Time_usage: ', round(time()-_start_time, 4))
 
-            self.recordSaving(path=self.training_record_path)
+        self.training_record += _training_record
+        # self.recordSaving(path=self.training_record_path)
+        self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
+        self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 
-            self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
-            self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
-
-            return _elbo.tolist()
+        return np.mean(_elbo_append)
     
     def recordSaving(self, path:str):
         torch.save({'state_dict': self.state_dict(), 
