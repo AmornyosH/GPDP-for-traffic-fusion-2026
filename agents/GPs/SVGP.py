@@ -3,6 +3,10 @@ import torch
 import numpy as np
 from time import time
 
+CUDA = torch.cuda.is_available()
+if CUDA:
+    torch.set_default_tensor_type(torch.cuda.FloatTensor)
+
 class mySVGP(torch.nn.Module):
     def __init__(self, parent_alg:str, params_dict:dict, dataset:dict, cuda:bool=False):
         super().__init__()
@@ -14,7 +18,7 @@ class mySVGP(torch.nn.Module):
         self.params_dict = params_dict
         # self.num_sample = params_dict['gp_num_sample']
         # self.num_inducing = params_dict['gp_num_inducing']
-        self.num_sample = int(params_dict['horizon'] / 10)
+        self.num_sample = int(params_dict['horizon'] / 5)
         self.num_inducing = 256
         self.x_dim = int(params_dict['observation_dim'])
         self.y_dim = int(params_dict['action_dim'])
@@ -141,7 +145,7 @@ class mySVGP(torch.nn.Module):
         _batch_size = self.num_inducing
         _gradient_step = int(self.num_sample//_batch_size)  
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-02)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-04)
         _training_record = 0
         _elbo_append = []
 

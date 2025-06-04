@@ -97,8 +97,14 @@ if __name__ == '__main__':
         training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(args.alg, ENV_NAME) 
     elif platform == 'win32':
         # Windows
-        dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)  
-        training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
+        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
+            # This is my PC
+            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)
+            training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
+        elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
+            # This is Xingyu's PC.
+            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)
+            training_record_path = 'C:/Users/AmornyosH/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
     elif platform == 'darwin':
         # macOS
         dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(ENV_NAME)  
@@ -129,9 +135,9 @@ if __name__ == '__main__':
             print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
         
     if args.task == 'testing':
-        _return = evaluation.sumoInteraction(env=env, 
-                                             num_veh=44, 
-                                             alg=args.alg, 
+        _return = evaluation.sumoInteraction(env=env,
+                                             num_veh=44,
+                                             alg=args.alg,
                                              dataset=dataset)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')
         print(f'{main_tag}', 'The return is ', f'{_return}', '.')

@@ -7,6 +7,8 @@ Remark: PyTorch version
 # ============================ Pytorch Related ============================
 import torch
 CUDA = torch.cuda.is_available()
+if CUDA:
+    torch.set_default_tensor_type(torch.cuda.FloatTensor)
 # ============================ Pytorch Related ============================
 
 # ================================== Others ==================================
@@ -58,7 +60,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=5, dec_step=5)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=5)
 
         # ======================================= Create GP model. =======================================
         # Uncomment out the selected gp model type...
@@ -113,6 +115,10 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.q_1.cuda()
             self.q_2.cuda()
 
+        # # best_dataset = dataset
+        # self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
+        print(f'{self.tag} Diffusion steps: ', self.DIFFU_STEPS, ', Decreased steps: ', self.DEC_DIFFU_STEPS)
+
         # # ======================================= Create GP model. =======================================
         # # Uncomment out the selected gp model type...
         # best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
@@ -149,7 +155,6 @@ class StochasticGaussianprocessDiffusionPolicy:
         print(f'{self.gp_model.tag} q_mean: {self.gp_model.q_mean}')
         print('========== ({:s}) Training Record: '.format(self.ALG), self.training_record, ' epoch.', 
               ', Gradient steps: ', self.training_record*(self.NUM_SAMPLE//self.MINIBATCH_SIZE))
-
     # Diffusion model's parameters initialisation Method
     def diffusionParams(self, schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=10):
         # Intialise Diffusion Model Parameters
@@ -255,7 +260,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.mu_r = _mu_r
             self.mu_r = torch.clip(input=_mu_r, min=self.MIN_DIFFU_SPACE, max=self.MAX_DIFFU_SPACE)
             self.var_r = _var_r
-            # print(self.mu_r, self.var_r)
+            print(self.mu_r, self.var_r)
 
         # Start reverse processes
         for i in range(self.DEC_DIFFU_STEPS): 
@@ -449,10 +454,10 @@ class StochasticGaussianprocessDiffusionPolicy:
         _training_record += 1
         self.training_record += 1
         
-        # Train the gp
-        if self.training_record % 10 == 0:
-            self.gp_model.y_train = self.getAlteredObservation(self.gp_model.x_train)
-            _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
+        # # Train the gp
+        # if self.training_record % 10 == 0:
+        #     self.gp_model.y_train = self.getAlteredObservation(self.gp_model.x_train)
+        #     _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
 
         # Save the training_records
         self.recordSaving(path=self.training_record_path)
