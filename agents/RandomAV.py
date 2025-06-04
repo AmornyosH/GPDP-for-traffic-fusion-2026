@@ -160,7 +160,7 @@ class RandomAV:
             elif inputs[1] < -0.4 and inputs[1] > -0.6:
                 decoded_actions[1] = self.lane_id[1]
             else:
-                decoded_actions[1] = self.getState()[1]
+                decoded_actions[1] = self.getObservation()[1]
 
         else:
             decoded_actions = misc.rangeConversion(inputs,
@@ -184,7 +184,12 @@ class RandomAV:
                   ', action_lat: ', action_lat if self.lateral_action else 'None', 
                   ', av_speed: ', round(state[0], 2),
                   ', av_lane: ', state[1])
-        duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)   
+
+        # Set a duration for applying new action (1 sumo timestep = 0.1s)
+        duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s) 
+
+        # Perform longitudinal action --> Use 'slowDown' command
+        traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
         # Perform lateral action
         if self.lateral_action:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)

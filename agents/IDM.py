@@ -159,7 +159,7 @@ class IDM:
             elif inputs[1] < -0.4 and inputs[1] > -0.6:
                 decoded_actions[1] = self.lane_id[1]
             else:
-                decoded_actions[1] = self.getState()[1]
+                decoded_actions[1] = self.getObservation()[1]
 
         else:
             decoded_actions = misc.rangeConversion(inputs,
@@ -185,6 +185,7 @@ class IDM:
                   ', av_speed: ', round(state[0], 2),
                   ', av_lane: ', state[1])
         duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)   
+
         # Perform lateral action
         if self.lateral_action:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)

@@ -156,10 +156,10 @@ class AutonomousVehicle:
         # If the environment has multiple lanes.
         if len(decoded_actions) > 1:
             decoded_actions[0] = misc.rangeConversion(inputs[0],
-                                                          old_min=self.min_action_space,
-                                                          old_max=self.max_action_space,
-                                                          new_min=self.min_accel,
-                                                          new_max=self.max_accel)
+                                                      old_min=self.min_action_space,
+                                                      old_max=self.max_action_space,
+                                                      new_min=self.min_accel,
+                                                      new_max=self.max_accel)
             if inputs[1] > 0.4 and inputs[1] < 0.6:
                 decoded_actions[1] = self.lane_id[0]
             elif inputs[1] < -0.4 and inputs[1] > -0.6:
@@ -180,7 +180,6 @@ class AutonomousVehicle:
         # Random agent will random actions both longitudinal and lateral.
         _pred = self.controller.predict(state=state, size=1, guide=True)
         _pred = self.actionDecoding(_pred.tolist()[0])
-        print(_pred)
         action_long = _pred[0]
         action_lat = _pred[1]
         # print('Random acc: ', action_long, ', Random lane: ', action_lat)
@@ -192,7 +191,13 @@ class AutonomousVehicle:
                   ', action_lat: ', action_lat if self.lateral_action else 'None', 
                   ', av_speed: ', round(state[0], 2),
                   ', av_lane: ', state[1])
+            # Set a derised speed from (current speed + accel)
+        # desired_speed = np.clip(a=(state[0]+action_long), a_min=self.min_speed, a_max=self.max_speed)
         duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)   
+
+        # Perform longitudinal action --> Use 'slowDown' command
+        # traci.vehicle.slowDown(vehID=self.veh_id, speed=desired_speed, duration=duration)
+        traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
         # Perform lateral action
         if self.lateral_action:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)

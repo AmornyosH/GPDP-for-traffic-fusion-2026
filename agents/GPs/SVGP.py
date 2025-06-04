@@ -199,11 +199,11 @@ class mySVGP(torch.nn.Module):
 
             _training_record += 1
         
-            # print('Gradient_Step: ', _training_record, 
-            #       ', Loss: ', round(_elbo.tolist(), 4), 
-            #       ', Var: ', round(torch.diagonal(self.q_var).mean().tolist(), 4),
-            #       ', Obs_var: ', round(self.sigma_n.tolist(), 4),
-            #       ', Time_usage: ', round(time()-_start_time, 4))
+            print('Gradient_Step: ', _training_record, 
+                  ', Loss: ', round(_elbo.tolist(), 4), 
+                  ', Var: ', round(torch.diagonal(self.q_var).mean().tolist(), 4),
+                  ', Obs_var: ', round(self.sigma_n.tolist(), 4),
+                  ', Time_usage: ', round(time()-_start_time, 4))
 
         self.training_record += _training_record
         # self.recordSaving(path=self.training_record_path)

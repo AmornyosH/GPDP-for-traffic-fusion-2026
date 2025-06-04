@@ -432,6 +432,9 @@ class StochasticGaussianprocessDiffusionPolicy:
             epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[_batch_size, self.ACTION_DIM])
             forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
             diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+            self.epsilon_optimizer.zero_grad()
+            diffu_loss.backward()
+            self.epsilon_optimizer.step()
             diffu_loss_accum += diffu_loss.tolist()
 
             # Update target networks
