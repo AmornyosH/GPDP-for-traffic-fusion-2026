@@ -60,12 +60,12 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=5)
+        self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=20, dec_step=20)
 
         # ======================================= Create GP model. =======================================
         # Uncomment out the selected gp model type...
-        best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
-        # best_dataset = dataset
+        # best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
+        best_dataset = dataset
         self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
 
         # Initialise neural networks
@@ -152,9 +152,10 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.gp_model.eval()
         print(f'{self.gp_model.tag} sigma_n: {self.gp_model.sigma_n}')
         print(f'{self.gp_model.tag} ell: {self.gp_model.ell}')
-        print(f'{self.gp_model.tag} q_mean: {self.gp_model.q_mean}')
+        print(f'{self.gp_model.tag} z_train: {self.gp_model.z_train}')
         print('========== ({:s}) Training Record: '.format(self.ALG), self.training_record, ' epoch.', 
               ', Gradient steps: ', self.training_record*(self.NUM_SAMPLE//self.MINIBATCH_SIZE))
+        
     # Diffusion model's parameters initialisation Method
     def diffusionParams(self, schedule='vp', beta_min=0.1, beta_max=10, num_step=50, dec_step=10):
         # Intialise Diffusion Model Parameters
@@ -322,7 +323,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         return torch.stack(_y_hat_list, dim=0).view(-1, self.ACTION_DIM)
 
     # Training Method (for offliine training)
-    def training(self, total_epoch:int, eval:bool=False, ft:bool=False):
+    def training(self,steps:int):
         # Get Expected Bellman's Equation (local)
         def _getExpectedCumulativeReturn(inputs):
             return batch_reward_tensor + (_GAMMA * self.q_2(inputs))
@@ -340,9 +341,8 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # V network Training Method (local)
         def _trainVNetwork(inputs, y_true):
-            _TAU = 0.75
+            _TAU = 0.90
             # Compute gradients
-            self.q_2_optimizer.zero_grad()
             y_pred_tensor = self.q_2(inputs)
             _td = y_true - y_pred_tensor
             _td_cond = torch.where(_td < 0, 1., 0.)
@@ -373,7 +373,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         _TAU = 0.005  # Tau for soft updating of target model's weights.
 
         # Extract dataset
-        buffer_size = self.NUM_SAMPLE if not ft else self.state_buffer.size()[0]
+        buffer_size = self.NUM_SAMPLE
         state_buffer = self.state_buffer
         action_buffer = self.action_buffer
         reward_buffer = self.reward_buffer
@@ -382,7 +382,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         # Initialise parameters
         _batch_size = self.MINIBATCH_SIZE
         _num_gradient_step = buffer_size//_batch_size
-        _training_record = self.training_record if not ft else 0
+        _training_record = self.training_record
         _gp_loss = 0
 
         # Set models to training mode.

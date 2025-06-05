@@ -129,7 +129,7 @@ if __name__ == '__main__':
                                                                 alg=args.alg,
                                                                 cont=False, 
                                                                 dataset=dataset, 
-                                                                total_steps=args.gradient_step)
+                                                                total_steps=int(args.gradient_step))
             print(f'{main_tag}', 'Offline Training for', f'{args.alg}', 'is completed.')
             print(f'{main_tag}', 'The training record is save at the location: ', f'{training_record_path}')
             print(f'{main_tag}', 'Exit Gracefully. Goodbye.')

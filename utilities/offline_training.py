@@ -3,7 +3,7 @@ import torch
 from time import time
 
 from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
-from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
+# from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Offline Training) ----->'
 CAUTION_TAG = '(Offline Training) !!!!!>'
@@ -17,13 +17,13 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     _steps = agent.training_step_counter
     _total_steps = total_steps
     _epoch = agent.training_record
-    _steps_per_epoch = int(_total_steps/agent.MINIBATCH_SIZE)
+    _steps_per_epoch = int(dataset['num_sample']/agent.MINIBATCH_SIZE)
     _total_epochs = int(_total_steps/_steps_per_epoch)
 
     # Start training
     while _epoch < _total_epochs:
         _start_time = time()
-        _training_results = agent.training(total_epoch=_total_epochs)
+        _training_results = agent.training(steps=_steps_per_epoch)
         _epoch += 1
         print(f'{TAG} Epoch: {_epoch}/{_total_epochs},',
               f' Gradient Step: {agent.training_step_counter}/{_total_steps}',
@@ -35,5 +35,5 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               )
     # GP training.
     agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-    agent.gp_model.myTraining(total_epoch=100)
+    agent.gp_model.myTraining(total_epoch=200)
     agent.recordSaving(path=agent.training_record_path)

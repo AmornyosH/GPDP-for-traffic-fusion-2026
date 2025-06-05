@@ -19,7 +19,8 @@ class DoubleRing:
         self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
         self.max_num_veh = num_veh
-        self.num_veh_config = [40, 42, 44, 46, 48]
+        # self.num_veh_config = [40, 42, 44, 46, 48]
+        self.num_veh_config = [10, 22, 44, 46, 58]
         self.veh_id_list = []  # Vehicle's id list.
     
         # Initialise SUMO
@@ -83,7 +84,8 @@ class DoubleRing:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        # _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        _depart_lane = 0
         self.prev_depart_lane_index = _depart_lane
         traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=_depart_lane)
         self.veh_id_list.append(veh.veh_id)

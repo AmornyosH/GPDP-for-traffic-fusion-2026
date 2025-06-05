@@ -18,7 +18,7 @@ class mySVGP(torch.nn.Module):
         self.params_dict = params_dict
         # self.num_sample = params_dict['gp_num_sample']
         # self.num_inducing = params_dict['gp_num_inducing']
-        self.num_sample = int(params_dict['horizon'] / 5)
+        self.num_sample = int(params_dict['horizon'] / 1)
         self.num_inducing = 256
         self.x_dim = int(params_dict['observation_dim'])
         self.y_dim = int(params_dict['action_dim'])
@@ -130,6 +130,12 @@ class mySVGP(torch.nn.Module):
             # _mean = _k_s.T @ self.K_inv @ self.y_train
             # _var = _k_ss - _k_s.T @ self.K_inv @ _k_s
 
+            # # Cholesky decomposition
+            # _L = torch.linalg.cholesky(self.K, upper=False)
+            # _alpha = torch.linalg.solve_triangular(_L.T, torch.linalg.solve_triangular(_L, self.y_train, upper=False), upper=True)
+            # _mean = _k_s.T @ _alpha
+
+            # _mean = _k_s.T @ (torch.linalg.solve_triangular(self.L_mm.T, torch.linalg.solve_triangular(self.L_mm, self.y_train, upper=False), upper=True))
             _mean = _k_s.T @ (torch.linalg.solve_triangular(self.L_mm.T, torch.linalg.solve_triangular(self.L_mm, self.q_mean, upper=False), upper=True))
             _v = torch.linalg.solve_triangular(self.L_mm, _k_s, upper=False)
             _k_tilde = _k_ss - (_v.T @ _v)
@@ -139,68 +145,62 @@ class mySVGP(torch.nn.Module):
             _var = (_sigma_f) + (self.sigma_n**2)
 
         return _mean, _var
-
     def myTraining(self, total_epoch:int, ft:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
         _batch_size = self.num_inducing
         _gradient_step = int(self.num_sample//_batch_size)  
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-04)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03)
         _training_record = 0
         _elbo_append = []
 
         while _training_record < total_epoch:
+        # while self.training_record < total_epoch:
             _start_time = time()
+            _sampling_indexes = torch.randperm(self.num_sample)
             for g in range(_gradient_step):
-                _batch_x = self.x_train[g*_batch_size:_batch_size+(g*_batch_size)]
-                _batch_y = self.y_train[g*_batch_size:_batch_size+(g*_batch_size)]
+                _batch_x = self.x_train[_sampling_indexes[g*_batch_size:_batch_size+(g*_batch_size)]]
+                _batch_y = self.y_train[_sampling_indexes[g*_batch_size:_batch_size+(g*_batch_size)]]
                 _batch_z = self.z_train
                 _l_1 = 0
                 _cov_optimizer.zero_grad()
                 _ind_optimizer.zero_grad()
                 _K_mm = self.rbfKernel(X_1=_batch_z, X_2=_batch_z, noise=True)
                 _K_nn = self.rbfKernel(X_1=_batch_x, X_2=_batch_x, noise=True)
-                # _K_mm_inv = torch.linalg.inv(_K_mm)
                 _L_mm = torch.linalg.cholesky(_K_mm, upper=False)
                 _K_mn = self.rbfKernel(X_1=_batch_z, X_2=_batch_x, noise=False)
                 _K_tilde = _K_nn - _K_mn.T @ (torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, _K_mn, upper=False), upper=True))
 
-                # _cov = (self.sigma_n**2) * torch.eye(self.y_dim)  # Inverse precision
-                # _L_sigma = torch.linalg.cholesky(_cov, upper=False)
+                _1 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_var, upper=False), upper=True)
+                _3 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_mean, upper=False), upper=True)
+                _sigma_n_sq = self.sigma_n**2
                 for h in range(_batch_size-1):
                     _k_i = _K_mn[:, h].view(-1, 1)
-                    _mean = _k_i.T @ (torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_mean, upper=False), upper=True))
-                    
-                    # _alpha = torch.linalg.solve_triangular(_L_sigma.T, torch.linalg.solve_triangular(_L_sigma, (_batch_y[h].view(-1, self.y_dim)-_mean), upper=False), upper=True)
-                    # _cap_lambda = ((_K_mm_inv @ _k_i) @ (_k_i.T @ _K_mm_inv)) / (self.sigma_n**2)
-                    # _l_1 += (-0.5 * (_batch_y[h]-_mean) @ _alpha) - torch.sum(torch.diagonal(_L_sigma)) - \
-                    #         (torch.log(torch.tensor(2*torch.pi))/2) - \
-                    #         ((0.5 * _K_tilde[h, h])/(self.sigma_n**2)) - (0.5*torch.sum(torch.diagonal(self.q_var @ _cap_lambda)))
-
-                    _1 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_var, upper=False), upper=True)
+                    _mean = _k_i.T @ _3
                     _2 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, _k_i, upper=False), upper=True)
-                    _sigma_f = torch.abs(_K_tilde[h, h].view(1, 1) + (_k_i.T @ _1 @ _2))
-
-                    _l_1 += (-(_batch_y[h].view(1, self.y_dim)-_mean)**2) / (2*(self.sigma_n**2)) - (torch.log(torch.sqrt(2*torch.pi*(self.sigma_n**2)))) - \
-                            (_sigma_f / (2*(self.sigma_n**2)))
+                    _sigma_f_sq = torch.abs(_K_tilde[h, h].view(1, 1) + (_k_i.T @ _1 @ _2))
+                    _l_1 += (-(_batch_y[h].view(1, self.y_dim)-_mean)**2) / (2*_sigma_n_sq) - \
+                            (torch.log(torch.sqrt(2*torch.pi*_sigma_n_sq))) - \
+                            (_sigma_f_sq / (2*_sigma_n_sq))
 
                 # KL-divergence term
                 _cov_q = torch.sqrt(torch.abs(torch.diagonal(self.q_var))) @ torch.ones(size=[self.num_inducing, self.y_dim])
                 _q = torch.distributions.Normal(loc=self.q_mean, scale=_cov_q)
                 _u = _q.sample(torch.Size())
                 _log_q_u = _q.log_prob(_u)
-                _p = torch.distributions.Normal(loc=0., scale=torch.sqrt(torch.abs(torch.diagonal(_K_mm)))@torch.ones(size=[self.num_inducing, self.y_dim]))
+                _p = torch.distributions.Normal(loc=0., 
+                                                scale=torch.sqrt(torch.abs(torch.diagonal(_K_mm)))@torch.ones(size=[self.num_inducing, self.y_dim]))
 
                 # ELBO
                 _elbo = _l_1 - (-torch.sum(torch.exp(_log_q_u)*(_p.log_prob(_u)-_log_q_u)))
-                _elbo = -_elbo.mean()
+                _elbo = -_elbo.mean()  # We maximise ELBO.
                 _elbo.backward(retain_graph=True)
                 _cov_optimizer.step()
                 _ind_optimizer.step()
 
-                _elbo_append.append(_elbo.tolist())
                 self.mll_append.append(_elbo.tolist())
 
+            self.training_record += 1
             _training_record += 1
         
             print('Gradient_Step: ', _training_record, 
