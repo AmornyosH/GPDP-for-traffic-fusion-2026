@@ -77,9 +77,16 @@ def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
     _next_state = dataset['next_observations']
     _truncrated = dataset['truncrated']
     _terminated = dataset['terminations']
+
+    _states_append = []
+    _actions_append = []
+    _rewards_append = []
+    _next_states_append = []
+
     _accum_reward = 0
     _best_reward = 0
     _counter = 0
+    _stop = False
     for n in range(_num_samples):
         if _truncrated[n] or _terminated[n]:
             if _accum_reward > _best_reward:
@@ -90,7 +97,11 @@ def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
             _accum_reward = 0
             _counter = 0
         else:
-            _accum_reward += _reward[n]
+            # _accum_reward += _reward[n]
+            _states_append.append(_state[n])
+            _actions_append.append(_action[n])
+            _rewards_append.append(_reward[n])
+            _next_states_append.append(_next_state[n])
             _counter += 1
             if _counter >= params_dict['horizon']:
                 # Reset

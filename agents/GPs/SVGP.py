@@ -209,7 +209,7 @@ class mySVGP(torch.nn.Module):
                   ', Time_usage: ', round(time()-_start_time, 4))
 
         self.training_record += _training_record
-        # self.recordSaving(path=self.training_record_path)
+        self.recordSaving(path=self.training_record_path)
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 

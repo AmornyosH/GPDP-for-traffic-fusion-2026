@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_ITS PyTorch Args')
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
-    parser.add_argument('--alg', default="SGDQ", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
+    parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='training', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=44,
+                                             num_veh=40,
                                              alg=args.alg,
                                              dataset=dataset)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')

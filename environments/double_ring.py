@@ -19,8 +19,8 @@ class DoubleRing:
         self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
         self.max_num_veh = num_veh
-        # self.num_veh_config = [40, 42, 44, 46, 48]
-        self.num_veh_config = [10, 22, 44, 46, 58]
+        self.num_veh_config = [40, 42, 44, 46, 48]
+        # self.num_veh_config = [10, 22, 44, 46, 58]
         self.veh_id_list = []  # Vehicle's id list.
     
         # Initialise SUMO
@@ -103,10 +103,12 @@ class DoubleRing:
         # Generate Non-Controlled Vehicles in the simulation
         for i in range(_total_num_veh-1):
             traci.vehicle.add(vehID=i, routeID=self.route_id, typeID='IDM', departLane="allowed")  # Add vehicle into the simulation in another lane
+            traci.vehicle.setImperfection(typeID=i, imperfection=np.random.random()*1)
             self.veh_id_list.append(str(i))  # Store veh_id into the list.
             traci.vehicle.setSpeed(vehID=i, speed=0.5)  # Slow every vehicle in the run-in steps
             traci.vehicle.setLaneChangeMode(i, 0b000000000000)  # Prohibit lane change to the IDM vehicles
         traci.simulationStep()  # Take 1st simulation step to prevent below condition to be ignored.
+
         # Limit the speed of agent to wait for the other vehicles to depart.
         while len(traci.simulation.getPendingVehicles()) != 0:
             # >>>>>>>>>> In run-in state, AV speed is limited to slow (In order to wait for all the vehicle to depart)
@@ -119,7 +121,7 @@ class DoubleRing:
         # `````````` After all vehicle have been departed, set the speed control back to SUMO configuration.
         for i in range(_total_num_veh-1):
             traci.vehicle.setSpeed(vehID=i, speed=-1)
-        traci.vehicle.setSpeed(vehID=veh.veh_id, speed=-1)
+        traci.vehicle.setSpeed(vehID=veh.veh_id, speed=-1)  # AV
         traci.simulationStep()
         _step += 1
         _run_in_time = _step
@@ -129,10 +131,15 @@ class DoubleRing:
         # `````````` Warmup Steps
         # Warm up the traffic to get a steady state of heavy traffic before learning (Follow the paper.)
         while _step < (_run_in_time + self.params_dict['warmup_time']):
+            # # Add noise to the vehicles.
+            # for i in range(_total_num_veh - 1):
+            #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
+            #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
+            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
-
+        traci.vehicle.setSpeed(vehID=veh.veh_id, speed=-1)  # AV
         # Return the initial state
         return _step
 

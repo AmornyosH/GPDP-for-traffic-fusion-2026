@@ -201,7 +201,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.mu_r = _mu_r
             self.mu_r = torch.clip(input=_mu_r, min=self.MIN_DIFFU_SPACE, max=self.MAX_DIFFU_SPACE)
             self.var_r = _var_r
-            print(self.mu_r, self.var_r)
+            print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
 
         # Start reverse processes
         for i in range(self.DEC_DIFFU_STEPS): 
@@ -414,6 +414,7 @@ class StochasticGaussianprocessDiffusionPolicy:
     # ==================================== GP model sections start ====================================
     # Prediction Method (mean, var)
     def predictGP(self, x_test):
+        print(f'{self.tag} observations: ', x_test)
         _mean, _var = self.gp_model.predict(X_s=x_test)
         return _mean, _var
     # ===================================== GP model sections end =====================================
