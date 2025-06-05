@@ -2,6 +2,9 @@
 import numpy as np
 import torch
 
+MISC_TAG = '(MISC) ----->'
+MISC_CAUTION_TAG = '(MISC) !!!!!>'
+
 def rangeConversion(input, new_min, new_max, old_min=-1, old_max=1) -> float:
     '''
     Range Conversion Method (Mapping from old range to a new range) \\
@@ -22,6 +25,89 @@ def rangeConversion(input, new_min, new_max, old_min=-1, old_max=1) -> float:
     return torch.clip(new_min + ((input - old_min) * (new_max - new_min) / (old_max - old_min)), 
                             min=new_min, 
                             max=new_max)
+
+# Best Trajectory Extraction Method
+def bestTrajExtraction(params_dict:dict, dataset:dict):
+    _num_samples = dataset['num_sample']
+    _state = dataset['observations']
+    _action = dataset['actions']
+    _reward = dataset['rewards']
+    _next_state = dataset['next_observations']
+    _truncrated = dataset['truncrated']
+    _terminated = dataset['terminations']
+    _accum_reward = 0
+    _best_reward = 0
+    _counter = 0
+    for n in range(_num_samples):
+        if _truncrated[n] or _terminated[n]:
+            if _accum_reward > _best_reward:
+                _best_reward = _accum_reward
+                _last_idx = n
+                _first_idx = n - _counter
+            # Reset
+            _accum_reward = 0
+            _counter = 0
+        else:
+            _accum_reward += _reward[n]
+            _counter += 1
+            if _counter >= params_dict['horizon']:
+                # Reset
+                _counter = 0
+                _accum_reward = 0
+
+    
+    print(f'{MISC_TAG} Best_reward: ', _best_reward, ', First_idx: ', _first_idx, ', Last_idx: ', _last_idx)
+
+    _best_dataset = ({'num_sample': len(_state[_first_idx:_last_idx]), 
+                      'observations': _state[_first_idx:_last_idx+1], 
+                      'actions': _action[_first_idx:_last_idx+1], 
+                      'rewards': _reward[_first_idx:_last_idx+1], 
+                      'next_observations': _next_state[_first_idx:_last_idx+1], 
+                      'truncrated': _truncrated[_first_idx:_last_idx+1],
+                      'termination': _terminated[_first_idx:_last_idx+1]})
+
+    return _best_dataset
+
+# Interval Trajectory Extraction For GP Method
+def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
+    _num_samples = dataset['num_sample']
+    _state = dataset['observations']
+    _action = dataset['actions']
+    _reward = dataset['rewards']
+    _next_state = dataset['next_observations']
+    _truncrated = dataset['truncrated']
+    _terminated = dataset['terminations']
+    _accum_reward = 0
+    _best_reward = 0
+    _counter = 0
+    for n in range(_num_samples):
+        if _truncrated[n] or _terminated[n]:
+            if _accum_reward > _best_reward:
+                _best_reward = _accum_reward
+                _last_idx = n
+                _first_idx = n - _counter
+            # Reset
+            _accum_reward = 0
+            _counter = 0
+        else:
+            _accum_reward += _reward[n]
+            _counter += 1
+            if _counter >= params_dict['horizon']:
+                # Reset
+                _counter = 0
+                _accum_reward = 0
+
+    print('best_reward: ', _best_reward, ', first_idx: ', _first_idx, ', last_idx: ', _last_idx)
+
+    _best_dataset = ({'num_sample': len(_state[_first_idx:_last_idx]), 
+                      'observations': _state[_first_idx:_last_idx], 
+                      'actions': _action[_first_idx:_last_idx], 
+                      'rewards': _reward[_first_idx:_last_idx], 
+                      'next_observations': _next_state[_first_idx:_last_idx], 
+                      'truncrated': _truncrated[_first_idx:_last_idx],
+                      'termination': _terminated[_first_idx:_last_idx]})
+
+    return _best_dataset
 
 # def flatten1D(input):
 #     '''

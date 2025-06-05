@@ -45,7 +45,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS/training_records'):
             print(f'{self.tag}', 'This is my PC. Saved the training records to a specific loaction.')
             self.training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ENV_CONFIG)
-            self.training_checkpoint_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ENV_CONFIG)
+            self.training_checkpoint_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record_checkpoint'.format(self.ALG, self.ENV_CONFIG)
             self.evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_evaluation_result'.format(self.ALG, self.ENV_CONFIG)
         else:
             print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
@@ -61,12 +61,6 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # Initialise Diffusion Model's Parameters
         self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=20, dec_step=20)
-
-        # ======================================= Create GP model. =======================================
-        # Uncomment out the selected gp model type...
-        # best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
-        best_dataset = dataset
-        self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -119,11 +113,11 @@ class StochasticGaussianprocessDiffusionPolicy:
         # self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
         print(f'{self.tag} Diffusion steps: ', self.DIFFU_STEPS, ', Decreased steps: ', self.DEC_DIFFU_STEPS)
 
-        # # ======================================= Create GP model. =======================================
-        # # Uncomment out the selected gp model type...
-        # best_dataset = self.bestTrajExtraction(dataset=dataset) if dataset is not None else None
-        # # best_dataset = dataset
-        # self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
+        # ======================================= Create GP model. =======================================
+        # Uncomment out the selected gp model type...
+        best_dataset = misc.bestTrajExtraction(params_dict=params_dict, dataset=dataset) if dataset is not None else None
+        # best_dataset = dataset
+        self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
 
     # Training Record Loading Method
     def loadTrainingRecord(self):
@@ -140,19 +134,6 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.epsilon_beh_loss_append = _loaded_training_record['epsilon_beh_loss_append']
         self.q_1_loss_append = _loaded_training_record['q_1_loss_append']
         self.q_2_loss_append = _loaded_training_record['q_2_loss_append']
-        self.gp_model.training_record = _loaded_training_record['gp_training_record']  # Training record counter
-        _state_dict = _loaded_training_record['gp_state_dict']
-        self.gp_model.x_train = _loaded_training_record['gp_x_train']
-        self.gp_model.y_train = _loaded_training_record['gp_y_train']
-        self.gp_model.z_train = _loaded_training_record['gp_z_train']
-        self.gp_model.sigma_n = torch.nn.Parameter(_state_dict['sigma_n'], requires_grad=True)
-        self.gp_model.ell = torch.nn.Parameter(_state_dict['ell'], requires_grad=True)
-        self.gp_model.q_mean = torch.nn.Parameter(_state_dict['q_mean'], requires_grad=True)
-        self.gp_model.q_var = torch.nn.Parameter(_state_dict['q_var'], requires_grad=True)
-        self.gp_model.eval()
-        print(f'{self.gp_model.tag} sigma_n: {self.gp_model.sigma_n}')
-        print(f'{self.gp_model.tag} ell: {self.gp_model.ell}')
-        print(f'{self.gp_model.tag} z_train: {self.gp_model.z_train}')
         print('========== ({:s}) Training Record: '.format(self.ALG), self.training_record, ' epoch.', 
               ', Gradient steps: ', self.training_record*(self.NUM_SAMPLE//self.MINIBATCH_SIZE))
         
@@ -204,47 +185,6 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.alpha_bar = torch.tensor(self.alpha_bar, dtype=torch.float32)
         self.POS_EMB = torch.tensor(self.POS_EMB, dtype=torch.float32)
         
-    # Best Trajectory Extraction Method
-    def bestTrajExtraction(self, dataset:dict):
-        _num_samples = dataset['num_sample']
-        _state = dataset['observations']
-        _action = dataset['actions']
-        _reward = dataset['rewards']
-        _next_state = dataset['next_observations']
-        _truncrated = dataset['truncrated']
-        _terminated = dataset['terminations']
-        _accum_reward = 0
-        _best_reward = 0
-        _counter = 0
-        for n in range(_num_samples):
-            if _truncrated[n] or _terminated[n]:
-                if _accum_reward > _best_reward:
-                    _best_reward = _accum_reward
-                    _last_idx = n
-                    _first_idx = n - _counter
-                # Reset
-                _accum_reward = 0
-                _counter = 0
-            else:
-                _accum_reward += _reward[n]
-                _counter += 1
-                if _counter >= self.params_dict['horizon']:
-                    # Reset
-                    _counter = 0
-                    _accum_reward = 0
-
-        print('best_reward: ', _best_reward, ', first_idx: ', _first_idx, ', last_idx: ', _last_idx)
-
-        _best_dataset = ({'num_sample': len(_state[_first_idx:_last_idx]), 
-                          'observations': _state[_first_idx:_last_idx], 
-                          'actions': _action[_first_idx:_last_idx], 
-                          'rewards': _reward[_first_idx:_last_idx], 
-                          'next_observations': _next_state[_first_idx:_last_idx], 
-                          'truncrated': _truncrated[_first_idx:_last_idx],
-                          'termination': _terminated[_first_idx:_last_idx]})
-
-        return _best_dataset
-
     # Diffusion process (forward process) Method
     def forwardProcess(self, data, epsilon, step:int=None):
         alpha_bars = self.alpha_bar[step]
@@ -491,17 +431,4 @@ class StochasticGaussianprocessDiffusionPolicy:
                     'q_2_tar': self.q_2_tar,
                     'epsilon_beh_loss_append': self.epsilon_beh_loss_append, 
                     'q_1_loss_append': self.q_1_loss_append, 
-                    'q_2_loss_append': self.q_2_loss_append,
-                    'gp_state_dict': self.gp_model.state_dict(),
-                    'gp_training_record': self.gp_model.training_record, 
-                    'gp_loss_append': self.gp_model.mll_append, 
-                    'gp_x_train': self.gp_model.x_train, 
-                    'gp_y_train': self.gp_model.y_train, 
-                    'gp_z_train': self.gp_model.z_train}, path)
-
-        # torch.save({'state_dict': self.state_dict(), 
-        #             'training_record': self.training_record,
-        #             'loss_append': self.mll_append,
-        #             'x_train': self.x_train, 
-        #             'y_train': self.y_train,
-        #             'z_train': self.z_train}, path)
+                    'q_2_loss_append': self.q_2_loss_append}, path)

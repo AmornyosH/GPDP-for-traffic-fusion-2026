@@ -35,5 +35,5 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               )
     # GP training.
     agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-    agent.gp_model.myTraining(total_epoch=200)
+    agent.gp_model.myTraining(total_epoch=100)
     agent.recordSaving(path=agent.training_record_path)

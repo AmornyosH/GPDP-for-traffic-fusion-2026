@@ -192,11 +192,9 @@ class AutonomousVehicle:
                   ', av_speed: ', round(state[0], 2),
                   ', av_lane: ', state[1])
             # Set a derised speed from (current speed + accel)
-        # desired_speed = np.clip(a=(state[0]+action_long), a_min=self.min_speed, a_max=self.max_speed)
-        duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)   
 
+        duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)   
         # Perform longitudinal action --> Use 'slowDown' command
-        # traci.vehicle.slowDown(vehID=self.veh_id, speed=desired_speed, duration=duration)
         traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
         # Perform lateral action
         if self.lateral_action:

@@ -84,8 +84,8 @@ class DoubleRing:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        # _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
-        _depart_lane = 0
+        _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        # _depart_lane = 0
         self.prev_depart_lane_index = _depart_lane
         traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=_depart_lane)
         self.veh_id_list.append(veh.veh_id)
