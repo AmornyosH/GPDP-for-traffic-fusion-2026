@@ -88,6 +88,7 @@ class mySVGP(torch.nn.Module):
         print(f'{self.tag} Algorithm: ', self.ALG)
         print(f'{self.tag} Num_Training_Sample: ', self.num_sample)
         print(f'{self.tag} Num_Inducing: ', self.num_inducing)
+        print(f'{self.tag} Q_mean: ', self.q_mean)
 
         print(self.x_train.size())
 
@@ -149,7 +150,7 @@ class mySVGP(torch.nn.Module):
         _batch_size = self.num_inducing
         _gradient_step = int(self.num_sample//_batch_size)  
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var], lr=1e-03)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03)
         _training_record = 0
         _elbo_append = []
 
