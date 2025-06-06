@@ -142,10 +142,10 @@ class AutonomousVehicle:
             observation[9] = self.detect_dist  # Assign distance = maximum observable distance.
 
         # Assign colour to detected vehicles.
-        traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0])
+        traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh is not None else ...
 
         # Inject noise to the observation (if noise=True)
         if noise == True:

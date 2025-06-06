@@ -3,7 +3,7 @@ from time import time, sleep
 
 # ========================================= My Modules ===========================================
 from environments.double_ring import DoubleRing
-from utilities import offline_training, dataset_creation, evaluation
+from utilities import offline_training, dataset_creation, evaluation, miscellaneous as misc
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -89,29 +89,12 @@ if __name__ == '__main__':
     av_id = 'AV_1'
     main_tag = '(main) ----->'
     caution_tag = '(main) !!!!!>'
-        # ---------- Define paths for each OS platform.
-        # !!!!!!!!!! I will change to desktop location when I publish this online. 
-    if platform == 'linux':
-        # Linux
-        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(ENV_NAME)  
-        training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(args.alg, ENV_NAME) 
-    elif platform == 'win32':
-        # Windows
-        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
-            # This is my PC
-            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)
-            training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
-        elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
-            # This is Xingyu's PC.
-            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset.npz'.format(ENV_NAME)
-            training_record_path = 'C:/Users/AmornyosH/resources/T-ITS/training_records/{}_{}_training_records'.format(args.alg, ENV_NAME)
-    elif platform == 'darwin':
-        # macOS
-        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(ENV_NAME)  
-        training_record_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_{}_training_records'.format(args.alg, ENV_NAME)
-
-    # ========== Create objects
+    
+    # ========== Create environment object
     env = DoubleRing(num_veh=NUM_VEH, render=RENDERING)  # Environment object
+    
+    # ---------- Define paths
+    dataset_path, training_record_path = misc.getPaths(operating_system=platform, alg=args.alg, env_name=ENV_NAME)
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # !!!!!!!!!! The dataset or replay buffers are required to intialise the RL agent. 
@@ -133,10 +116,11 @@ if __name__ == '__main__':
             print(f'{main_tag}', 'Offline Training for', f'{args.alg}', 'is completed.')
             print(f'{main_tag}', 'The training record is save at the location: ', f'{training_record_path}')
             print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
-        
+    
+    # ========== Testing (Evaluation)
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=40,
+                                             num_veh=44,
                                              alg=args.alg,
                                              dataset=dataset)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')

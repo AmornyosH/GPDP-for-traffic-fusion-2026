@@ -1,10 +1,35 @@
 
 import numpy as np
 import torch
+import os
 
 MISC_TAG = '(MISC) ----->'
 MISC_CAUTION_TAG = '(MISC) !!!!!>'
 
+# Paths Management Method
+def getPaths(operating_system:str, alg:str, env_name:str):
+    if operating_system == 'linux':
+        # Linux
+        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(env_name)  
+        training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(alg, env_name) 
+    elif operating_system == 'win32':
+        # Windows
+        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
+            # This is my PC
+            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(env_name)
+            training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
+        elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
+            # This is Xingyu's PC.
+            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset.npz'.format(env_name)
+            training_record_path = 'C:/Users/AmornyosH/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
+    elif operating_system == 'darwin':
+        # macOS
+        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(env_name)  
+        training_record_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_{}_training_records'.format(alg, env_name)
+
+    return dataset_path, training_record_path   
+
+# Range Conversion Method
 def rangeConversion(input, new_min, new_max, old_min=-1, old_max=1) -> float:
     '''
     Range Conversion Method (Mapping from old range to a new range) \\
@@ -120,44 +145,6 @@ def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
 
     return _best_dataset
 
-# def flatten1D(input):
-#     '''
-#     Variables flatten method (Convert N-D arrays to 1-D list) \\
-#     This method will convert any input in N-D arrays format to 1-D (list) format.
-#     This method can receive 'tensor' and 'numpy' format.
-
-#     Input Arguments: input:Any
-#     Return: flatten_input (Numpy Format)
-#     '''
-#     if tf.is_tensor(input):
-#         flatten_input = tf.concat([tf.reshape(item, [-1]) for item in input], axis=0)
-#         # Convert to numpy
-#         flatten_input = flatten_input.numpy()
-#     else:
-#         flatten_input = np.concatenate([tf.reshape(item, [-1]) for item in input], axis=0)
-#     return  flatten_input
-
-# def assignVarsToModels(model, input):
-#     '''
-#     Variable assignment method \\
-#     This method will assign the value from input list (1-D) to NNs model. \\
-#     Usually, this method is created for assigned new weights computed from optimisation problem \\
-#     to the weigths of neural networks. \\
-    
-#     Input Arguments: model(NN), input:(1-D list)
-#     Returns: model after new weigths assigned.
-#     '''
-#     shapes = [item.shape.as_list() for item in model.trainable_variables]
-#     size_theta = np.sum([np.prod(item) for item in shapes])
-#     start = 0
-#     for idx, item in enumerate(shapes):
-#         size = np.prod(item)
-#         param = tf.reshape(input[start:start + size], item)
-#         model.trainable_variables[idx].assign(param)
-#         start += size
-#     assert start == size_theta, 'messy shapes'
-#     return model
-
 def klDivergence(input_1, input_2):
     '''
     KL-Divergence Computation Method \\
@@ -186,3 +173,4 @@ def sinPositionEncoding(seq_len, dim, N=10000):
 def sinusoidalEncoding(input, seq_len):
     t_space = np.linspace(start=-1, stop=1, num=seq_len, dtype=float)  # [-1, -0.5, 0, 0.5, 1]
     return np.sin(2 * np.pi * t_space[input-1])  # sin(2 * pi * t)
+

@@ -2,8 +2,8 @@ import numpy as np
 import torch
 from time import time
 
-from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
-# from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
+
+from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Offline Training) ----->'
 CAUTION_TAG = '(Offline Training) !!!!!>'
@@ -11,7 +11,14 @@ CAUTION_TAG = '(Offline Training) !!!!!>'
 def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):
     # Initialise agent's object
     if alg == 'SGDP':
+        from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
         agent = StochasticGaussianprocessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, ft=False)
+    elif alg == 'SGDQ':
+        from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
+        agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, ft=False)
+    else:
+        print(f'{CAUTION_TAG} Please provide validable name of the algorithms. Program is terminated!')
+        exit()
 
     # Initialise parameters
     _steps = agent.training_step_counter
@@ -34,6 +41,8 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               ' Time: ', round(time()-_start_time, 2)
               )
     # GP training.
-    agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-    agent.gp_model.myTraining(total_epoch=200)
-    agent.recordSaving(path=agent.training_record_path)
+    if agent.ALG == 'SGDP':
+        # For SGDP, the GPR model is trained seperately. 
+        agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
+        agent.gp_model.myTraining(total_epoch=200)
+        agent.recordSaving(path=agent.training_record_path)

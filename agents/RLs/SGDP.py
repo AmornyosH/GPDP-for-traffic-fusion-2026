@@ -60,7 +60,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=50)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=5)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -247,7 +247,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             for m in range(len(states)):
                 # Altered Observation (My approach)
                 # For q-network and diffusion, still using the original observation (x) not the latent.
-                _sampling_size = 50
+                _sampling_size = 10
                 _state_n_tensor = torch.reshape(states[m], [-1, self.STATE_DIM]).repeat(_sampling_size, 1)
                 a_i_m_1 = self.predict(state=_state_n_tensor, size=_sampling_size, guide=False)
 
@@ -349,15 +349,6 @@ class StochasticGaussianprocessDiffusionPolicy:
             batch_reward_tensor = reward_buffer[_sampling_indices[0+(g*_batch_size):_batch_size+(g*_batch_size)]]
             batch_next_state_tensor = next_state_buffer[_sampling_indices[0+(g*_batch_size):_batch_size+(g*_batch_size)]]
 
-            # # Prepare data for q learning
-            # _batch_pred_action = self.predict(state=batch_state_tensor, size=_batch_size, guide=False).view(-1, self.ACTION_DIM)
-            # y_true_1 = _getExpectedCumulativeReturn(inputs=torch.concat([batch_next_state_tensor, _batch_pred_action], dim=1))
-            # y_true_2 = _getExpectedQValues(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1))
-            # q_1_loss = _trainQ1Network(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1), y_true=y_true_1) # State-Action network (Q)
-            # q_1_loss_accum += q_1_loss.tolist()
-            # q_2_loss = _trainVNetwork(inputs=batch_state_tensor, y_true=y_true_2) # State-Action network (Q)
-            # q_2_loss_accum += q_2_loss.tolist()
-
             # Prepare data for q learning
             y_true_1 = _getExpectedCumulativeReturn(inputs=batch_next_state_tensor)
             y_true_2 = _getExpectedQValues(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1))
@@ -381,7 +372,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
             # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
             self.epsilon_optimizer.zero_grad()
-            diffu_loss.backward()
+            diffu_loss.backward(retain_graph=True)
             self.epsilon_optimizer.step()
             diffu_loss_accum += diffu_loss.tolist()
 
@@ -417,7 +408,7 @@ class StochasticGaussianprocessDiffusionPolicy:
     # ==================================== GP model sections start ====================================
     # Prediction Method (mean, var)
     def predictGP(self, x_test):
-        print(f'{self.tag} observations: ', x_test)
+        # print(f'{self.tag} observations: ', x_test)
         _mean, _var = self.gp_model.predict(X_s=x_test)
         return _mean, _var
     # ===================================== GP model sections end =====================================
