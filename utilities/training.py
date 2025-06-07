@@ -92,17 +92,17 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
                 _termination = True # Set termination true just for now.
 
             # Storing transitions
-            observations_buffer.append(_observation)
-            actions_buffer.append(_action)
-            rewards_buffer.append(_reward)
-            next_observation_buffer.append(_next_observation)
-            truncrated_buffer.append(_truncrated)
-            termination_buffer.append(_termination)
+            torch.vstack([agent.controller.state_buffer, torch.tensor(_observation.reshape(1, -1))])
+            torch.vstack([agent.controller.action_buffer, torch.tensor(_action)])
+            torch.vstack([agent.controller.reward_buffer, torch.tensor(_reward)])
+            torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation)])
+            # truncrated_buffer.append(_truncrated)
+            # termination_buffer.append(_termination)
 
             # if len(observations_buffer) >= num_data:
             #     break
 
-            _training_results = agent.controller.training(steps=1)
+            _training_results = agent.controller.training(steps=1, online=True)
 
             # print(f'{TAG} Epoch: {agent.controller.training_record},',
             #     f' Gradient Step: {agent.controller.training_step_counter}',
@@ -126,7 +126,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         # Train GP
         # For SGDP, the GPR model is trained seperately. 
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)
-        agent.controller.gp_model.myTraining(total_epoch=10)
+        agent.controller.gp_model.myTraining(total_epoch=10, online=True)
         # agent.controller.recordSaving(path=agent.controller.training_record_path)
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',

@@ -40,7 +40,7 @@ class AutonomousVehicle:
         self.max_accel = 1.0
         self.min_action_space = -1.
         self.max_action_space = 1.
-        self.min_gap = 2.0
+        self.min_gap = 2.00
 
         # Other Variables
         self.reward_append = []  # Used in reward function.
@@ -62,7 +62,7 @@ class AutonomousVehicle:
         observation[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
 
         # Reset color for detected vehicles
-        if self.leader_veh != [] and self.leader_veh is not None:
+        if self.leader_veh != []:
             traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255])
             traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255])
             traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255])
@@ -77,6 +77,7 @@ class AutonomousVehicle:
             observation[3] = self.leader_veh[1]
         else:
             # No -- There is not
+            self.leader_veh = []
             observation[2] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
             observation[3] = self.detect_dist  # Assign distance = maximum observable distance.
 
@@ -90,6 +91,7 @@ class AutonomousVehicle:
             observation[5] = self.follower_veh[1]
         else:
             # No -- There is not
+            self.follower_veh = []
             observation[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
             observation[5] = self.detect_dist  # Assign distance = maximum observable distance.
 
@@ -142,8 +144,9 @@ class AutonomousVehicle:
             observation[9] = self.detect_dist  # Assign distance = maximum observable distance.
 
         # Assign colour to detected vehicles.
-        traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
-        traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
+        if self.leader_veh != []:
+            traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
+            traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
         traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh is not None else ...
         traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh is not None else ...
 

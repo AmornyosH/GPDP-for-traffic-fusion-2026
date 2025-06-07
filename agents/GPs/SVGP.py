@@ -25,6 +25,7 @@ class mySVGP(torch.nn.Module):
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS/training_records'):
             print(f'{self.tag}', 'This is my PC. Saved the training records to a specific loaction.')
             self.training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_gp_training_record'.format(self.ALG, self.ENV_CONFIG)
+            self.online_training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_gp_online_training_record'.format(self.ALG, self.ENV_CONFIG)
             self.training_checkpoint_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_gp_training_record_checkpoint'.format(self.ALG, self.ENV_CONFIG)
             self.evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_evaluation_result'.format(self.ALG, self.ENV_CONFIG)
         else:
@@ -32,6 +33,7 @@ class mySVGP(torch.nn.Module):
             import pathlib
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
             self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_online_training_record'
             self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_training_record_checkpoint'
             self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
@@ -88,7 +90,8 @@ class mySVGP(torch.nn.Module):
         print(f'{self.tag} Algorithm: ', self.ALG)
         print(f'{self.tag} Num_Training_Sample: ', self.num_sample)
         print(f'{self.tag} Num_Inducing: ', self.num_inducing)
-        print(f'{self.tag} Q_mean: ', self.q_mean)
+        print(f'{self.tag} Training_Record: ', self.training_record)
+        # print(f'{self.tag} Q_mean: ', self.q_mean)
 
         print(self.x_train.size())
 
@@ -145,7 +148,7 @@ class mySVGP(torch.nn.Module):
 
         return _mean, _var
     
-    def myTraining(self, total_epoch:int, ft:bool=False):
+    def myTraining(self, total_epoch:int, online:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
         _batch_size = self.num_inducing
         _gradient_step = int(self.num_sample//_batch_size)  
@@ -210,7 +213,7 @@ class mySVGP(torch.nn.Module):
                   ', Time_usage: ', round(time()-_start_time, 4))
 
         self.training_record += _training_record
-        self.recordSaving(path=self.training_record_path)
+        self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 

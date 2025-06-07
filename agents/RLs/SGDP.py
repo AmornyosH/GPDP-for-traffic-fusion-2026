@@ -45,6 +45,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS/training_records'):
             print(f'{self.tag}', 'This is my PC. Saved the training records to a specific loaction.')
             self.training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record'.format(self.ALG, self.ENV_CONFIG)
+            self.online_training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_online_training_record'.format(self.ALG, self.ENV_CONFIG)
             self.training_checkpoint_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_training_record_checkpoint'.format(self.ALG, self.ENV_CONFIG)
             self.evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{:s}_{:s}_evaluation_result'.format(self.ALG, self.ENV_CONFIG)
         else:
@@ -52,6 +53,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             import pathlib
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
             self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
             self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
             self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
@@ -265,7 +267,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         return torch.stack(_y_hat_list, dim=0).view(-1, self.ACTION_DIM)
 
     # Training Method (for offliine training)
-    def training(self,steps:int):
+    def training(self, steps:int, online:bool):
         # Get Expected Bellman's Equation (local)
         def _getExpectedCumulativeReturn(inputs):
             return batch_reward_tensor + (_GAMMA * self.q_2(inputs))
@@ -393,8 +395,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         #     self.gp_model.y_train = self.getAlteredObservation(self.gp_model.x_train)
         #     _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
 
-        # # Save the training_records
-        # self.recordSaving(path=self.training_record_path)
+        # Save the training_records
+        self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
 
         # Return the training results
         return {'gradient_step': self.training_step_counter,
