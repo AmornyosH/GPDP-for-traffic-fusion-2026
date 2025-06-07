@@ -135,7 +135,7 @@ class DoubleRing:
             # for i in range(_total_num_veh - 1):
             #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
-            # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
+            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================

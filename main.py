@@ -3,7 +3,7 @@ from time import time, sleep
 
 # ========================================= My Modules ===========================================
 from environments.double_ring import DoubleRing
-from utilities import offline_training, dataset_creation, evaluation, miscellaneous as misc
+from utilities import dataset_creation, evaluation, miscellaneous as misc, training
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         _training_option = input('{:s} Please define training options ["offline", "online"]: '.format(main_tag))
         if _training_option == 'offline':
             # Go for offline training. 
-            _training_record = offline_training.offlineTraining(path=training_record_path, 
+            _training_record = training.offlineTraining(path=training_record_path, 
                                                                 env=env,
                                                                 alg=args.alg,
                                                                 cont=False, 
@@ -116,11 +116,18 @@ if __name__ == '__main__':
             print(f'{main_tag}', 'Offline Training for', f'{args.alg}', 'is completed.')
             print(f'{main_tag}', 'The training record is save at the location: ', f'{training_record_path}')
             print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
+        if _training_option == 'online':
+            _training_record = training.onlineTraining(path=training_record_path, 
+                                                       env=env,
+                                                       alg=args.alg,
+                                                       cont=False, 
+                                                       dataset=dataset, 
+                                                       total_steps=int(args.gradient_step))
     
     # ========== Testing (Evaluation)
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=44,
+                                             num_veh=40,
                                              alg=args.alg,
                                              dataset=dataset)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')

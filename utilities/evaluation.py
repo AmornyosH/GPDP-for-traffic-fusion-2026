@@ -33,7 +33,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict):
     # Loop
     for t in range(horizon):
         # Agent take action
-        _action = agent.actionPerform(state=_observation, s_print=True)
+        _action = agent.actionPerform(state=_observation, s_print=False)
 
         # Take a step in the environment and observes termination. 
         _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)

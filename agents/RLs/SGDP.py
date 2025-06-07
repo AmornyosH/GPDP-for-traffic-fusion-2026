@@ -60,7 +60,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=5)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=50)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -82,8 +82,8 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.epsilon_beh_loss_append = []
             self.q_1_loss_append = []
             self.q_2_loss_append = []
-            self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_INPUT_DIM, output_dim=self.ACTION_DIM)
-            # self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_BEH_INPUT_DIM, output_dim=self.ACTION_DIM)
+            # self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_INPUT_DIM, output_dim=self.ACTION_DIM)
+            self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_BEH_INPUT_DIM, output_dim=self.ACTION_DIM)
             self.q_1 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.Q_INPUT_DIM, output_dim=1)
             self.q_2 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.V_INPUT_DIM, output_dim=1)
             # Initialise Target models
@@ -135,7 +135,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.epsilon_beh_loss_append = _loaded_training_record['epsilon_beh_loss_append']
         self.q_1_loss_append = _loaded_training_record['q_1_loss_append']
         self.q_2_loss_append = _loaded_training_record['q_2_loss_append']
-        print('========== ({:s}) Training Record: '.format(self.ALG), self.training_record, ' epoch.', 
+        print(f'{self.tag} Training Record: '.format(self.ALG), self.training_record, ' epoch.', 
               ', Gradient steps: ', self.training_record*(self.NUM_SAMPLE//self.MINIBATCH_SIZE))
         
     # Diffusion model's parameters initialisation Method
@@ -202,7 +202,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.mu_r = _mu_r
             self.mu_r = torch.clip(input=_mu_r, min=self.MIN_DIFFU_SPACE, max=self.MAX_DIFFU_SPACE)
             self.var_r = _var_r
-            print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
+            # print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
 
         # Start reverse processes
         for i in range(self.DEC_DIFFU_STEPS): 
@@ -211,8 +211,8 @@ class StochasticGaussianprocessDiffusionPolicy:
             rev_pos = self.DEC_DIFFU_STEPS-i-1
             rev_pos_emb = self.POS_EMB[rev_pos].repeat(size, 1)
             # Predict the noise for the reverse process (e_{theta})
-            epsilon_theta_t = self.epsilon_beh(torch.concat((inputs, x_T, rev_pos_emb), dim=1))
-            # epsilon_theta_t = self.epsilon_beh(torch.concat((x_T, rev_pos_emb), dim=1))
+            # epsilon_theta_t = self.epsilon_beh(torch.concat((inputs, x_T, rev_pos_emb), dim=1))
+            epsilon_theta_t = self.epsilon_beh(torch.concat((x_T, rev_pos_emb), dim=1))
             # Reverse process (Stochastic) (DDPM)
             x_t_m_1  = (x_T / torch.sqrt(self.alpha[rev_pos])) - \
                        (self.beta[rev_pos] * epsilon_theta_t / torch.sqrt(self.alpha[rev_pos]*(1-self.alpha_bar[rev_pos])))
@@ -247,7 +247,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             for m in range(len(states)):
                 # Altered Observation (My approach)
                 # For q-network and diffusion, still using the original observation (x) not the latent.
-                _sampling_size = 10
+                _sampling_size = 50
                 _state_n_tensor = torch.reshape(states[m], [-1, self.STATE_DIM]).repeat(_sampling_size, 1)
                 a_i_m_1 = self.predict(state=_state_n_tensor, size=_sampling_size, guide=False)
 
@@ -323,7 +323,7 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # Initialise parameters
         _batch_size = self.MINIBATCH_SIZE
-        _num_gradient_step = buffer_size//_batch_size
+        _num_gradient_step = buffer_size//_batch_size if steps is None else steps
         _training_record = self.training_record
         _gp_loss = 0
 
@@ -369,8 +369,8 @@ class StochasticGaussianprocessDiffusionPolicy:
             encode_t_tensor = self.POS_EMB[rand_t] 
             epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[_batch_size, self.ACTION_DIM])
             forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
-            diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
-            # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+            # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+            diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
             self.epsilon_optimizer.zero_grad()
             diffu_loss.backward(retain_graph=True)
             self.epsilon_optimizer.step()
@@ -393,8 +393,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         #     self.gp_model.y_train = self.getAlteredObservation(self.gp_model.x_train)
         #     _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
 
-        # Save the training_records
-        self.recordSaving(path=self.training_record_path)
+        # # Save the training_records
+        # self.recordSaving(path=self.training_record_path)
 
         # Return the training results
         return {'gradient_step': self.training_step_counter,

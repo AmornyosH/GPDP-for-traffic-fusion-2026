@@ -29,8 +29,8 @@ def datasetCreation(env:object, num_data:int):
             # Start with IDM
             agent = idm_agent
         else:
-            agent = random_agent
-            # agent = idm_agent
+            # agent = random_agent
+            agent = idm_agent
 
         # Initialise env.
         _ = env.reset(veh=agent, num_veh=env.num_veh_config[int(trajectory_count % len(env.num_veh_config))])

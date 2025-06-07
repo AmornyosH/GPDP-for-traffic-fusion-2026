@@ -62,7 +62,7 @@ class AutonomousVehicle:
         observation[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
 
         # Reset color for detected vehicles
-        if self.leader_veh != []:
+        if self.leader_veh != [] and self.leader_veh is not None:
             traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255])
             traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255])
             traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255])
