@@ -19,8 +19,8 @@ class DoubleRing:
         self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
         self.max_num_veh = num_veh
-        self.num_veh_config = [40, 42, 44, 46, 48]
-        # self.num_veh_config = [10, 22, 44, 46, 58]
+        # self.num_veh_config = [40, 42, 44, 46, 48]
+        self.num_veh_config = [33, 40, 44, 49, 58]
         self.veh_id_list = []  # Vehicle's id list.
     
         # Initialise SUMO

@@ -5,8 +5,8 @@ from time import time
 from agents.AV import AutonomousVehicle
 from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
-TAG = '(Offline Training) ----->'
-CAUTION_TAG = '(Offline Training) !!!!!>'
+TAG = '(Training) ----->'
+CAUTION_TAG = '(Training) !!!!!>'
 
 # ========== Offline Training
 def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):

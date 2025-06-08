@@ -44,10 +44,10 @@ class IDM:
         self.reward_append = []  # Used in reward function.
         self.accum_reward_append = []  # Used in reward function.
         self.accum_reward = 0  # Used in reward function.
-        self.leader_veh = []
-        self.follower_veh = []
-        self.neighbor_leader_veh = []
-        self.neighbor_follower_veh = []
+        self.leader_veh = None
+        self.follower_veh = None
+        self.neighbor_leader_veh = None
+        self.neighbor_follower_veh = None
 
     # Observation Method
     def getObservation(self, noise=False):
@@ -57,21 +57,22 @@ class IDM:
         observation[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
 
         # Reset color for detected vehicles
-        if self.leader_veh != []:
-            traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255])
-            traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255])
-            traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255])
-            traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 255])
+        traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255]) if self.leader_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255]) if self.follower_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255]) if self.neighbor_leader_veh is not None else ...
+        traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 255]) if self.neighbor_follower_veh is not None else ...
 
         # Get Leader on AV's current lane
         self.leader_veh = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
         # Check if there is a vehicle in front ?
-        if self.leader_veh != None:
+        if self.leader_veh is not None:
             # Yes -- There is
+            traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
             observation[2] = traci.vehicle.getSpeed(vehID=self.leader_veh[0])
             observation[3] = self.leader_veh[1]
         else:
             # No -- There is not
+            self.leader_veh = None
             observation[2] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
             observation[3] = self.detect_dist  # Assign distance = maximum observable distance.
 
@@ -81,10 +82,12 @@ class IDM:
         # Check if there is a vehicle behind ?
         if self.follower_veh != '':
             # Yes -- There is
+            traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
             observation[4] = traci.vehicle.getSpeed(vehID=self.follower_veh[0])
             observation[5] = self.follower_veh[1]
         else:
             # No -- There is not
+            self.follower_veh = None
             observation[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
             observation[5] = self.detect_dist  # Assign distance = maximum observable distance.
 
@@ -115,6 +118,8 @@ class IDM:
             else:
                 neigh_leader = self.leader_veh = traci.vehicle.getLeader(vehID=candidate_neigh_leader[0], dist=self.detect_dist)
                 self.neighbor_leader_veh = neigh_leader
+
+            traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
             observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0])
             observation[7] = self.neighbor_leader_veh[1]
         else:
@@ -129,6 +134,8 @@ class IDM:
             else:
                 neigh_follower = traci.vehicle.getFollower(vehID=candidate_neigh_follower[0], dist=self.detect_dist)
                 self.neighbor_follower_veh = neigh_follower
+
+            traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) # Assign colour to detected vehicles.
             observation[8] = traci.vehicle.getSpeed(vehID=self.neighbor_follower_veh[0])
             observation[9] = self.neighbor_follower_veh[1]
         else:
@@ -136,11 +143,12 @@ class IDM:
             observation[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
             observation[9] = self.detect_dist  # Assign distance = maximum observable distance.
 
-        # Assign colour to detected vehicles.
-        traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0])
-        traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0])
+        # # Assign colour to detected vehicles.
+        # if self.leader_veh != []:
+        #     traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
+        #     traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
+        # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh is not None else ...
+        # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh is not None else ...
 
         # Inject noise to the observation (if noise=True)
         if noise == True:
@@ -152,8 +160,9 @@ class IDM:
                 else:
                     ran_noise = np.random.random() * noise_factor
                 observation[n] += ran_noise
+        
+        # print(f'{self.veh_tag} observations: {observation}')
 
-        # print(f'{self.veh_tag} observation: ', observation)
         return observation
 
 

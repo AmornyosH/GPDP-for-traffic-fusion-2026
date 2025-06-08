@@ -91,9 +91,6 @@ class mySVGP(torch.nn.Module):
         print(f'{self.tag} Num_Training_Sample: ', self.num_sample)
         print(f'{self.tag} Num_Inducing: ', self.num_inducing)
         print(f'{self.tag} Training_Record: ', self.training_record)
-        # print(f'{self.tag} Q_mean: ', self.q_mean)
-
-        print(self.x_train.size())
 
     def getInitInducingPoints(self, x_train):
         _indexes = np.linspace(start=0, stop=len(x_train), num=self.num_inducing, endpoint=False)
