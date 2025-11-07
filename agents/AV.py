@@ -46,10 +46,10 @@ class AutonomousVehicle:
         self.reward_append = []  # Used in reward function.
         self.accum_reward_append = []  # Used in reward function.
         self.accum_reward = 0  # Used in reward function.
-        self.leader_veh = []
-        self.follower_veh = []
-        self.neighbor_leader_veh = []
-        self.neighbor_follower_veh = []
+        self.leader_veh = None
+        self.follower_veh = None
+        self.neighbor_leader_veh = None
+        self.neighbor_follower_veh = None
 
         # Initialise High Level control algorithm 
         self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset)

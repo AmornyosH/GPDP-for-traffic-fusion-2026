@@ -73,10 +73,11 @@ if __name__ == '__main__':
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
-    parser.add_argument('--task', default='training', help='Task: ["training", "testing", "dataset"], default:training')
+    parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
-    parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
+    parser.add_argument('--rendering', default='render', help='Rendering: [render, no-render], default:no-render')
+    parser.add_argument('--load', action='store_true')
     args = parser.parse_args()
 
     # ========== Define global constants
@@ -129,7 +130,8 @@ if __name__ == '__main__':
         _return = evaluation.sumoInteraction(env=env,
                                              num_veh=40,
                                              alg=args.alg,
-                                             dataset=dataset)
+                                             dataset=dataset,
+                                             load=args.load)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')
         print(f'{main_tag}', 'The return is ', f'{_return}', '.')
         print(f'{main_tag}', 'Exit Gracefully. Goodbye.')

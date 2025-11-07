@@ -20,7 +20,7 @@ import numpy as np
 import os
 
 class StochasticGaussianprocessDiffusionPolicy:
-    def __init__(self, params_dict:dict, dataset:dict, ft:bool=False):
+    def __init__(self, params_dict:dict, dataset:dict, load:bool=False):
         self.ALG = 'SGDP'
         self.ENV_CONFIG = params_dict['environment']
         self.STATE_DIM = int(params_dict['observation_dim'])
@@ -69,11 +69,13 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.EPSILON_BEH_INPUT_DIM = self.ACTION_DIM + self.POS_DIM
         self.Q_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM
         self.V_INPUT_DIM = self.STATE_DIM
+        
         # Check for the training record file and the response from user...
-        if os.path.isfile(self.training_record_path) is True:
-            print(f'{self.tag} There exists a training record for this agent. Do you wish to load the exist one ?')
-            _ans_1 = input(f'{self.tag} Press [y/n] and enter: ')
-        else:
+        if load:
+            _ans_1 = 'y'
+            if not os.path.isfile(self.training_record_path) is True:
+                print(f'{self.tag} There is no exists a training record for this agent !!')
+        else: 
             _ans_1 = 'n'
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':

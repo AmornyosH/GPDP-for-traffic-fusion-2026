@@ -18,7 +18,7 @@ import numpy as np
 import os
 
 class StochasticGaussianprocessDiffusionQlearning:
-    def __init__(self, params_dict:dict, dataset:dict, ft:bool=False):
+    def __init__(self, params_dict:dict, dataset:dict, load:bool=False):
         self.ALG = 'SGDQ'
         self.ENV_CONFIG = params_dict['environment']
         self.STATE_DIM = int(params_dict['observation_dim'])
@@ -49,19 +49,26 @@ class StochasticGaussianprocessDiffusionQlearning:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=5, dec_step=5)
+        self.diffusionParams(schedule='vp', beta_min=1, beta_max=10, num_step=50, dec_step=50)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
         self.EPSILON_BEH_INPUT_DIM = self.ACTION_DIM + self.POS_DIM
         self.Q_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM
-        self.V_INPUT_DIM = self.STATE_DIM
+        self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_BEH_INPUT_DIM, output_dim=self.ACTION_DIM)
+        self.q_1 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.Q_INPUT_DIM, output_dim=1)
+        # Declare optimizer for the networks (offline training)
+        self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-04)
+        self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-04)
+        
         # Check for the training record file and the response from user...
-        if os.path.isfile(self.training_record_path) is True:
-            print('========== ({:s}) There exists a training record for this agent. Do you wish to load the exist one ?'.format(self.ALG))
-            _ans_1 = input('========== ({:s}) Press [y/n] and enter: '.format(self.ALG))
-        else:
+        if load:
+            _ans_1 = 'y'
+            if not os.path.isfile(self.training_record_path) is True:
+                print(f'{self.tag} There is no exists a training record for this agent !!')
+        else: 
             _ans_1 = 'n'
+            
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':
             print('========== ({:s}) Create new record and models!'.format(self.ALG))
@@ -70,31 +77,22 @@ class StochasticGaussianprocessDiffusionQlearning:
             self.epsilon_beh_loss_append = []
             self.q_1_loss_append = []
             self.q_2_loss_append = []
-            self.epsilon_beh = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.EPSILON_INPUT_DIM, output_dim=self.ACTION_DIM)
-            self.q_1 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.Q_INPUT_DIM, output_dim=1)
-            self.q_2 = MLP.MLP(num_hiddens=3, num_nodes=256, input_dim=self.V_INPUT_DIM, output_dim=1)
+
             # Initialise Target models
             self.q_1_tar = self.q_1
-            self.q_2_tar = self.q_2
         elif _ans_1 == 'y' or _ans_1=='Y' or _ans_1=='Yes' or _ans_1=='YES':
             print('========== ({:s}) Load training record.'.format(self.ALG))
             self.loadTrainingRecord()  # Load from the method here <--------- ****
             self.epsilon_beh.eval()
             self.q_1.eval()
-            self.q_2.eval()
         else:
             print('========== ({:s}) Try another answer. ("y" for yes (load existing one) or "n" for no (create new)).'.format(self.ALG))
             exit()
             
-        # Declare optimizer for the networks (offline training)
-        self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-04)
-        self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-04)
-        self.q_2_optimizer = torch.optim.Adam(self.q_2.parameters(), lr=3e-04)
         # Set to cuda if GPU is available.
         if CUDA:
             self.epsilon_beh.cuda()
             self.q_1.cuda()
-            self.q_2.cuda()
 
         # ======================================= Create GP model. =======================================
         # Uncomment out the selected gp model type...
@@ -375,11 +373,8 @@ class StochasticGaussianprocessDiffusionQlearning:
             q_2_loss_accum += q_2_loss.tolist()
 
             self.q_1_optimizer.zero_grad()
-            self.q_2_optimizer.zero_grad()
             q_1_loss.backward(retain_graph=True)
-            q_2_loss.backward(retain_graph=True)
             self.q_1_optimizer.step()
-            self.q_2_optimizer.step()
 
             # Prepare data for diffusion learning
             rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[_batch_size])
