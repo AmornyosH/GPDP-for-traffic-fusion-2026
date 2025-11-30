@@ -111,7 +111,7 @@ if __name__ == '__main__':
             _training_record = training.offlineTraining(path=training_record_path, 
                                                                 env=env,
                                                                 alg=args.alg,
-                                                                cont=False, 
+                                                                cont=args.load, 
                                                                 dataset=dataset, 
                                                                 total_steps=int(args.gradient_step))
             print(f'{main_tag}', 'Offline Training for', f'{args.alg}', 'is completed.')

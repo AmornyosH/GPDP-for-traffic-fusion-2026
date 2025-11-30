@@ -7,16 +7,17 @@ from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Training) ----->'
 CAUTION_TAG = '(Training) !!!!!>'
+PRECISION = 4
 
 # ========== Offline Training
 def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):
     # Initialise agent's object
     if alg == 'SGDP':
         from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
-        agent = StochasticGaussianprocessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, ft=False)
+        agent = StochasticGaussianprocessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, load=cont)
     elif alg == 'SGDQ':
         from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
-        agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, ft=False)
+        agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, load=cont)
     else:
         print(f'{CAUTION_TAG} Please provide validable name of the algorithms. Program is terminated!')
         exit()
@@ -31,21 +32,22 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     # Start training
     while _epoch < _total_epochs:
         _start_time = time()
-        _training_results = agent.training(steps=_steps_per_epoch)
+        _training_results = agent.training(steps=_steps_per_epoch, online=False)
         _epoch += 1
         print(f'{TAG} Epoch: {_epoch}/{_total_epochs},',
               f' Gradient Step: {agent.training_step_counter}/{_total_steps}',
-              ' P-Loss: ', round(_training_results['policy_loss'], 2),
-              ' Q1-Loss: ', round(_training_results['q1_loss'], 2),
-              ' Q2-Loss: ', round(_training_results['q2_loss'], 2) if _training_results.get('q2_loss') is not None else '',
-              ' GP-Loss: ', round(_training_results['gp_loss'], 2) if _training_results.get('gp_loss') is not None else '',
-              ' Time: ', round(time()-_start_time, 2)
+              ' P-Loss: ', round(_training_results['policy_loss'], PRECISION),
+              ' Q1-Loss: ', round(_training_results['q1_loss'], PRECISION),
+              ' Q2-Loss: ', round(_training_results['q2_loss'], PRECISION) if _training_results.get('q2_loss') is not None else '',
+              ' GP-Loss: ', round(_training_results['gp_loss'], PRECISION) if _training_results.get('gp_loss') is not None else '',
+              ' Time: ', round(time()-_start_time, PRECISION)
               )
+        
     # GP training.
     if agent.ALG == 'SGDP':
         # For SGDP, the GPR model is trained seperately. 
         agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-        agent.gp_model.myTraining(total_epoch=200)
+        agent.gp_model.myTraining(total_epoch=100)
         agent.recordSaving(path=agent.training_record_path)
 
 # ========== Online Training
@@ -131,16 +133,16 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',
             f' Gradient Step: {agent.controller.training_step_counter}',
-            ' P-Loss: ', round(_training_results['policy_loss'], 2),
-            ' Q1-Loss: ', round(_training_results['q1_loss'], 2),
-            ' Q2-Loss: ', round(_training_results['q2_loss'], 2) if _training_results.get('q2_loss') is not None else '',
-            ' GP-Loss: ', round(_training_results['gp_loss'], 2) if _training_results.get('gp_loss') is not None else '',
+            ' P-Loss: ', round(_training_results['policy_loss'], PRECISION),
+            ' Q1-Loss: ', round(_training_results['q1_loss'], PRECISION),
+            ' Q2-Loss: ', round(_training_results['q2_loss'], PRECISION) if _training_results.get('q2_loss') is not None else '',
+            ' GP-Loss: ', round(_training_results['gp_loss'], PRECISION) if _training_results.get('gp_loss') is not None else '',
             #   ' Time: ', round(time()-_start_time, 2)
             )
 
         # Print summary status.
         print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
-                                                    ', Avg_raw_return: ', round(_accum_reward, 2),
+                                                    ', Avg_raw_return: ', round(_accum_reward, PRECISION),
                                                     ', Num_vehicles: ', len(env.veh_id_list), 
                                                     ', Depart_lane: ', _observation[1])
     

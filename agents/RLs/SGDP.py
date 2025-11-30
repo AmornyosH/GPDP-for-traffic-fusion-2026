@@ -28,6 +28,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.params_dict = params_dict
         self.tag = '(SGDP) ----->'
         self.caution_tag = '(SGDP) !!!!!>'
+        self.num_action_candidate = 16
+        
         # Getting the dataset...
         if dataset is not None:
             self.NUM_SAMPLE = dataset['num_sample']
@@ -77,6 +79,7 @@ class StochasticGaussianprocessDiffusionPolicy:
                 print(f'{self.tag} There is no exists a training record for this agent !!')
         else: 
             _ans_1 = 'n'
+            
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':
             print(f'{self.tag}', 'Create new record and models!')
@@ -251,7 +254,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             for m in range(len(states)):
                 # Altered Observation (My approach)
                 # For q-network and diffusion, still using the original observation (x) not the latent.
-                _sampling_size = 50
+                _sampling_size = self.num_action_candidate
                 _state_n_tensor = torch.reshape(states[m], [-1, self.STATE_DIM]).repeat(_sampling_size, 1)
                 a_i_m_1 = self.predict(state=_state_n_tensor, size=_sampling_size, guide=False)
 
@@ -388,15 +391,17 @@ class StochasticGaussianprocessDiffusionPolicy:
         # self.q_1_loss_append.append(q_1_loss_accum/_num_gradient_step)
         # # self.q_2_loss_append.append(q_2_loss_accum/_num_gradient_step)
 
+        # Train the GPR after finished the EPOCH.
+        # _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
+
         # Increase training record after epoch finished.
         _training_record += 1
         self.training_record += 1
         
-        # # Train the gp
-        # if self.training_record % 10 == 0:
+        # # Altered Observation
+        # if self.training_record % 5 == 0:
         #     self.gp_model.y_train = self.getAlteredObservation(self.gp_model.x_train)
-        #     _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
-
+            
         # Save the training_records
         self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
 
@@ -405,7 +410,8 @@ class StochasticGaussianprocessDiffusionPolicy:
                 'policy_loss': diffu_loss_accum/_num_gradient_step, 
                 'q1_loss': q_1_loss_accum/_num_gradient_step, 
                 'q2_loss': q_2_loss_accum/_num_gradient_step, 
-                'gp_loss': _gp_loss}
+                # 'gp_loss': _gp_loss,
+                }
 
         # ========================== Training Loop End ==========================
 
