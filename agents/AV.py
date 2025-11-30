@@ -52,7 +52,7 @@ class AutonomousVehicle:
         self.neighbor_follower_veh = None
 
         # Initialise High Level control algorithm 
-        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset)
+        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load)
 
     # Observation Method
     def getObservation(self, noise=False):

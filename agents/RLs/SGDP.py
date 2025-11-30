@@ -28,7 +28,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.params_dict = params_dict
         self.tag = '(SGDP) ----->'
         self.caution_tag = '(SGDP) !!!!!>'
-        self.num_action_candidate = 16
+        self.num_action_candidate = 32
         
         # Getting the dataset...
         if dataset is not None:
@@ -74,6 +74,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         
         # Check for the training record file and the response from user...
         if load:
+            print(load)
             _ans_1 = 'y'
             if not os.path.isfile(self.training_record_path) is True:
                 print(f'{self.tag} There is no exists a training record for this agent !!')
@@ -209,7 +210,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.mu_r = _mu_r
             self.mu_r = torch.clip(input=_mu_r, min=self.MIN_DIFFU_SPACE, max=self.MAX_DIFFU_SPACE)
             self.var_r = _var_r
-            # print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
+            print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
 
         # Start reverse processes
         for i in range(self.DEC_DIFFU_STEPS): 

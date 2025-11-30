@@ -17,7 +17,7 @@ class mySVGP(torch.nn.Module):
         self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
         self.num_sample = int(params_dict['horizon'] / 1)
-        self.num_inducing = 200
+        self.num_inducing = 500
         self.x_dim = int(params_dict['observation_dim'])
         self.y_dim = int(params_dict['action_dim'])
 

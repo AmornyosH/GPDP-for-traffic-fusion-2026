@@ -6,6 +6,7 @@ from agents.RandomAV import RandomAV
 from agents.AV import AutonomousVehicle
 
 def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool):
+    print(load)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
