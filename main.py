@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
-    parser.add_argument('--rendering', default='render', help='Rendering: [render, no-render], default:no-render')
+    parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
     parser.add_argument('--load', action='store_true')
     args = parser.parse_args()
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     # ========== Testing (Evaluation)
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=40,
+                                             num_veh=44,
                                              alg=args.alg,
                                              dataset=dataset,
                                              load=args.load)

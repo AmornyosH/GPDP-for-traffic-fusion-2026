@@ -19,8 +19,9 @@ class DoubleRing:
         self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
         self.max_num_veh = num_veh
-        # self.num_veh_config = [40, 42, 44, 46, 48]
-        self.num_veh_config = [33, 40, 44, 49, 58]
+        self.num_veh_config = [40, 42, 44, 46, 48]
+        # self.num_veh_config = [33, 40, 44, 49, 58]
+        # self.num_veh_config = [44]
         self.veh_id_list = []  # Vehicle's id list.
     
         # Initialise SUMO
@@ -51,11 +52,13 @@ class DoubleRing:
                     'warmup_time': int(500/SUMO_TIMESTEP),
                     'one_hour': int(3600/SUMO_TIMESTEP),
                     'horizon': int(1000/SUMO_TIMESTEP),
+                    'circumference': 250,
                     'state_dim': 20,
                     'observation_dim': 10,
                     'action_dim': 2,
                     'lateral_action': True, 
                     'detect_leading_dist': 100,
+                    'veh_gap_dist': 2,
                     'max_speed_allowed': 10, 
                     'min_speed_allowed': 0, 
                     'reward_config': 'original', 
@@ -135,8 +138,8 @@ class DoubleRing:
             # for i in range(_total_num_veh - 1):
             #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
-            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
-            # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=3.0)  # AV
+            # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
+            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=3.5)  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================

@@ -18,7 +18,7 @@ class mySVGP(torch.nn.Module):
         self.params_dict = params_dict
         self.num_sample = int(params_dict['horizon'] / 1)
         self.num_inducing = 500
-        self.x_dim = int(params_dict['observation_dim'])
+        self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
         self.y_dim = int(params_dict['action_dim'])
 
         # Initialise Paths

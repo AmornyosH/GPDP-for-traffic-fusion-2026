@@ -1,5 +1,7 @@
 from agents.IDM import IDM
 from agents.RandomAV import RandomAV
+from agents.DerivedAV import DerivedAV
+
 import numpy as np
 
 def datasetCreation(env:object, num_data:int):
@@ -23,6 +25,7 @@ def datasetCreation(env:object, num_data:int):
         # Select the agent
         idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')
         random_agent = RandomAV(load=False, params_dict=env.params_dict, dataset=None, id='my_Random')
+        derived_agent = DerivedAV(load=False, params_dict=env.params_dict, dataset=None, id='my_Derived')
 
         # We need to select the agent before reset the env. 
         if len(observations_buffer) < (num_data // 2):
@@ -30,7 +33,8 @@ def datasetCreation(env:object, num_data:int):
             agent = idm_agent
         else:
             # agent = random_agent
-            agent = idm_agent
+            # agent = idm_agent
+            agent = derived_agent
 
         # Initialise env.
         _ = env.reset(veh=agent, num_veh=env.num_veh_config[int(trajectory_count % len(env.num_veh_config))])
