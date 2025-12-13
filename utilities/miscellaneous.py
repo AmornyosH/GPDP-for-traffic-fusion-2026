@@ -93,6 +93,44 @@ def bestTrajExtraction(params_dict:dict, dataset:dict):
 
     return _best_dataset
 
+# Best Trajectory Extraction Method
+def allTrajExtraction(params_dict:dict, dataset:dict):
+    # Reduce the resolution of the dataset
+    _num_skip = 10
+    _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
+    _new_horizon = params_dict['horizon']//_num_skip
+    _state = dataset['observations'][_new_indices]
+    _action = dataset['actions'][_new_indices]
+    _reward = dataset['rewards'][_new_indices]
+    _next_state = dataset['next_observations'][_new_indices]
+    _truncrated = dataset['truncrated'][_new_indices]
+    _terminated = dataset['terminations'][_new_indices]
+    _num_samples = len(_state)
+    _accum_reward = 0
+    _best_reward = 0
+    _counter = 0
+
+    # for n in range(_num_samples):
+    #     if _truncrated[n] or _terminated[n] or _counter >= _new_horizon:
+    #         # Reset
+    #         _accum_reward = 0
+    #         _counter = 0
+    #     else:
+    #         _accum_reward += _reward[n]
+    #         _counter += 1
+
+    # print(f'{MISC_TAG} Best_reward: ', _best_reward, ', First_idx: ', _first_idx, ', Last_idx: ', _last_idx)
+
+    _best_dataset = ({'num_sample': len(_state), 
+                      'observations': _state, 
+                      'actions': _action, 
+                      'rewards': _reward, 
+                      'next_observations': _next_state, 
+                      'truncrated': _truncrated,
+                      'termination': _terminated})
+
+    return _best_dataset
+
 # Interval Trajectory Extraction For GP Method
 def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
     _num_samples = dataset['num_sample']

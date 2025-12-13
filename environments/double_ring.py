@@ -23,6 +23,8 @@ class DoubleRing:
         # self.num_veh_config = [33, 40, 44, 49, 58]
         # self.num_veh_config = [44]
         self.veh_id_list = []  # Vehicle's id list.
+        self.circumference = 250.
+        self.veh_gap_dist = 2.
     
         # Initialise SUMO
         # ========== Initial command for opening the sumo interface.
@@ -52,13 +54,13 @@ class DoubleRing:
                     'warmup_time': int(500/SUMO_TIMESTEP),
                     'one_hour': int(3600/SUMO_TIMESTEP),
                     'horizon': int(1000/SUMO_TIMESTEP),
-                    'circumference': 250,
+                    'circumference': self.circumference,
                     'state_dim': 20,
                     'observation_dim': 10,
                     'action_dim': 2,
                     'lateral_action': True, 
                     'detect_leading_dist': 100,
-                    'veh_gap_dist': 2,
+                    'veh_gap_dist': self.veh_gap_dist,
                     'max_speed_allowed': 10, 
                     'min_speed_allowed': 0, 
                     'reward_config': 'original', 
@@ -144,6 +146,8 @@ class DoubleRing:
             _step += 1
         # ==================================== Warmup steps end ====================================
         traci.vehicle.setSpeed(vehID=veh.veh_id, speed=-1)  # AV
+        # Compute for the target speed
+        veh.target_speed = (self.circumference - (self.veh_gap_dist * _total_num_veh/2)) / (_total_num_veh/2)
         # Return the initial state
         return _step
 

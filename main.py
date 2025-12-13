@@ -11,7 +11,8 @@ import os
 import argparse
 import random
 import torch
-CUDA = torch.cuda.is_available()
+# CUDA = torch.cuda.is_available()
+CUDA = False
 import matplotlib.pyplot as plt
 
 # ======================================= Local Functions ========================================
@@ -47,7 +48,7 @@ def getDataset(path:str):
         dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data)
 
         # Saving the dataset.
-        np.savez(path, **dataset)
+        np.savez(path+f'{_num_data}', **dataset)
         
         # Print Final status
         print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{path}')

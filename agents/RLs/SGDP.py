@@ -9,6 +9,7 @@ import torch
 CUDA = torch.cuda.is_available()
 if CUDA:
     torch.set_default_tensor_type(torch.cuda.FloatTensor)
+# CUDA = False
 # ============================ Pytorch Related ============================
 
 # ================================== Others ==================================
@@ -124,8 +125,10 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # ======================================= Create GP model. =======================================
         # Uncomment out the selected gp model type...
-        best_dataset = misc.bestTrajExtraction(params_dict=params_dict, dataset=dataset) if dataset is not None else None
+        # best_dataset = misc.bestTrajExtraction(params_dict=params_dict, dataset=dataset) if dataset is not None else None
+        best_dataset = misc.allTrajExtraction(params_dict=params_dict, dataset=dataset) if dataset is not None else None
         # best_dataset = dataset
+        
         self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG)
 
     # Training Record Loading Method

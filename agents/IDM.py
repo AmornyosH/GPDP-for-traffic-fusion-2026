@@ -48,6 +48,7 @@ class IDM:
         self.follower_veh = None
         self.neighbor_leader_veh = None
         self.neighbor_follower_veh = None
+        self.target_speed = 0
 
     # Observation Method
     def getObservation(self, noise=False):
@@ -164,7 +165,6 @@ class IDM:
         # print(f'{self.veh_tag} observations: {observation}')
 
         return observation
-
 
     # Action Encoding Method 
     def actionEncoding(self, *args):

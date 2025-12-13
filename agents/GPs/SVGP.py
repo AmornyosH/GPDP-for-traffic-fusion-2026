@@ -3,9 +3,10 @@ import torch
 import numpy as np
 from time import time
 
-CUDA = torch.cuda.is_available()
-if CUDA:
-    torch.set_default_tensor_type(torch.cuda.FloatTensor)
+# CUDA = torch.cuda.is_available()
+# if CUDA:
+#     torch.set_default_tensor_type(torch.cuda.FloatTensor)
+CUDA = False
 
 class mySVGP(torch.nn.Module):
     def __init__(self, parent_alg:str, params_dict:dict, dataset:dict, cuda:bool=False):
@@ -17,8 +18,9 @@ class mySVGP(torch.nn.Module):
         self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
         self.num_sample = int(params_dict['horizon'] / 1)
-        self.num_inducing = 500
+        self.num_inducing = 250
         self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
+        # self.x_dim = 4
         self.y_dim = int(params_dict['action_dim'])
 
         # Initialise Paths
@@ -52,13 +54,19 @@ class mySVGP(torch.nn.Module):
             self.training_record = 0  # Training record counter
             # Initialise training data
             _start = 0
-            self.x_train = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample], dtype=torch.float32)
-            self.y_train = torch.tensor(dataset['actions'][0+_start:_start+self.num_sample], dtype=torch.float32)
+            _slice_idx = np.arange(stop=self.num_sample, step=10)
+            self.x_train = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
+            self.x_train_original = self.x_train
+            self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
+            # self.x_train_original = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample, :params_dict['observation_dim']], dtype=torch.float32)
+            # self.x_train = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample, :self.x_dim], dtype=torch.float32)
+            # self.y_train = torch.tensor(dataset['actions'][0+_start:_start+self.num_sample], dtype=torch.float32)
             # Intialise inducing points (Let's fix it first.)
             self.z_train, self.indexes = self.getInitInducingPoints(x_train=self.x_train)
             # Create hyperparameters
             self.sigma_n = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
             self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
+            # print(self.ell)
             self.q_mean = torch.nn.Parameter(self.y_train[self.indexes], requires_grad=True)
             self.q_var = torch.nn.Parameter(torch.ones([self.num_inducing, self.num_inducing]), requires_grad=True)  # Single covariance
 
@@ -86,6 +94,7 @@ class mySVGP(torch.nn.Module):
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 
+        self.num_sample = len(self.x_train)
         print(f'{self.tag} GP Initialised!')
         print(f'{self.tag} Algorithm: ', self.ALG)
         print(f'{self.tag} Num_Training_Sample: ', self.num_sample)
@@ -121,7 +130,8 @@ class mySVGP(torch.nn.Module):
 
     def predict(self, X_s):
         with torch.no_grad():
-            x_test = X_s.view(-1, self.x_dim)
+            x_test = X_s[:, :self.x_dim]
+            x_test = x_test.view(-1, self.x_dim)
             _k_s = self.rbfKernel(X_1=self.z_train, X_2=x_test, noise=False)
             _k_ss = self.rbfKernel(X_1=x_test, X_2=x_test, noise=False)
 
@@ -148,9 +158,11 @@ class mySVGP(torch.nn.Module):
     def myTraining(self, total_epoch:int, online:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
         _batch_size = self.num_inducing
-        _gradient_step = int(self.num_sample//_batch_size)  
+        # _gradient_step = int(self.num_sample//_batch_size)  
+        _gradient_step = int(len(self.x_train)//_batch_size)
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
         _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03)
+        # _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var], lr=1e-02)
         _training_record = 0
         _elbo_append = []
 
