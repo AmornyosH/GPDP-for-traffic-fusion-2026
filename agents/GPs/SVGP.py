@@ -18,10 +18,11 @@ class mySVGP(torch.nn.Module):
         self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
         self.num_sample = int(params_dict['horizon'] / 1)
-        self.num_inducing = 250
+        self.num_inducing = 500
         self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
         # self.x_dim = 4
         self.y_dim = int(params_dict['action_dim'])
+        # self.y_dim = 1
 
         # Initialise Paths
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS/training_records'):

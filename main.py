@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # ========== Testing (Evaluation)
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=44,
+                                             num_veh=40,
                                              alg=args.alg,
                                              dataset=dataset,
                                              load=args.load)

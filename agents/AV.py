@@ -50,6 +50,7 @@ class AutonomousVehicle:
         self.follower_veh = None
         self.neighbor_leader_veh = None
         self.neighbor_follower_veh = None
+        self.previous_action = np.array([0.00, 0.00])
 
         # Initialise High Level control algorithm 
         self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load)
@@ -210,6 +211,7 @@ class AutonomousVehicle:
                 decoded_actions[1] = self.lane_id[1]
             else:
                 decoded_actions[1] = self.getObservation()[1]
+                # decoded_actions[1] = self.previous_action[1]
 
         else:
             decoded_actions = misc.rangeConversion(inputs,
@@ -239,11 +241,16 @@ class AutonomousVehicle:
 
         # duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)
         duration = self.sumo_time_step
-        # Perform longitudinal action --> Use 'slowDown' command
-        traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
+        # # Perform longitudinal action --> Use 'slowDown' command
+        # traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
+        # Get current speed of the AV...
+        cur_speed = state[0]
+        _desired_speed = cur_speed + action_long
+        traci.vehicle.slowDown(vehID=self.veh_id, speed=_desired_speed, duration=duration)
         # Perform lateral action
         if self.lateral_action:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
+        self.previous_action = action_sample
         return action_sample
 
     # Next Observation and Raw reward Method

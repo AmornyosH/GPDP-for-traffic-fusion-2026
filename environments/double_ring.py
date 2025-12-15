@@ -58,6 +58,7 @@ class DoubleRing:
                     'state_dim': 20,
                     'observation_dim': 10,
                     'action_dim': 2,
+                    # 'action_dim': 1,
                     'lateral_action': True, 
                     'detect_leading_dist': 100,
                     'veh_gap_dist': self.veh_gap_dist,
@@ -141,7 +142,7 @@ class DoubleRing:
             #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
-            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=3.5)  # AV
+            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=4.2)  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
