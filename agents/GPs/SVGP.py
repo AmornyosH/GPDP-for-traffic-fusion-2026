@@ -18,7 +18,7 @@ class mySVGP(torch.nn.Module):
         self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
         self.num_sample = int(params_dict['horizon'] / 1)
-        self.num_inducing = 500
+        self.num_inducing = 1000
         self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
         # self.x_dim = 4
         self.y_dim = int(params_dict['action_dim'])
@@ -56,8 +56,8 @@ class mySVGP(torch.nn.Module):
             # Initialise training data
             _start = 0
             _slice_idx = np.arange(stop=self.num_sample, step=10)
-            self.x_train = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
-            self.x_train_original = self.x_train
+            self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
+            self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
             # self.x_train_original = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample, :params_dict['observation_dim']], dtype=torch.float32)
             # self.x_train = torch.tensor(dataset['observations'][0+_start:_start+self.num_sample, :self.x_dim], dtype=torch.float32)
@@ -133,6 +133,9 @@ class mySVGP(torch.nn.Module):
         with torch.no_grad():
             x_test = X_s[:, :self.x_dim]
             x_test = x_test.view(-1, self.x_dim)
+            # # print(X_s)
+            # x_test = X_s.view(-1, self.x_dim)
+            # # print(self.x_train[499])
             _k_s = self.rbfKernel(X_1=self.z_train, X_2=x_test, noise=False)
             _k_ss = self.rbfKernel(X_1=x_test, X_2=x_test, noise=False)
 
@@ -159,10 +162,11 @@ class mySVGP(torch.nn.Module):
     def myTraining(self, total_epoch:int, online:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
         _batch_size = self.num_inducing
+        # _batch_size = 256
         # _gradient_step = int(self.num_sample//_batch_size)  
         _gradient_step = int(len(self.x_train)//_batch_size)
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-02)
         # _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var], lr=1e-02)
         _training_record = 0
         _elbo_append = []
@@ -171,7 +175,7 @@ class mySVGP(torch.nn.Module):
         # while self.training_record < total_epoch:
             _start_time = time()
             _sampling_indexes = torch.randperm(self.num_sample)
-            for g in range(_gradient_step-1):
+            for g in range(_gradient_step):
                 _batch_x = self.x_train[_sampling_indexes[g*_batch_size:_batch_size+(g*_batch_size)]]
                 _batch_y = self.y_train[_sampling_indexes[g*_batch_size:_batch_size+(g*_batch_size)]]
                 _batch_z = self.z_train
@@ -187,7 +191,7 @@ class mySVGP(torch.nn.Module):
                 _1 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_var, upper=False), upper=True)
                 _3 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, self.q_mean, upper=False), upper=True)
                 _sigma_n_sq = self.sigma_n**2
-                for h in range(_batch_size-1):
+                for h in range(_batch_size):
                     _k_i = _K_mn[:, h].view(-1, 1)
                     _mean = _k_i.T @ _3
                     _2 = torch.linalg.solve_triangular(_L_mm.T, torch.linalg.solve_triangular(_L_mm, _k_i, upper=False), upper=True)
@@ -221,6 +225,8 @@ class mySVGP(torch.nn.Module):
                   ', Var: ', round(torch.diagonal(self.q_var).mean().tolist(), 4),
                   ', Obs_var: ', round(self.sigma_n.tolist(), 4),
                   ', Time_usage: ', round(time()-_start_time, 4))
+
+            self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
 
         self.training_record += _training_record
         self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)

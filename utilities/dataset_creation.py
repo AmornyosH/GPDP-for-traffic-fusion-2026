@@ -2,6 +2,8 @@ from agents.IDM import IDM
 from agents.RandomAV import RandomAV
 from agents.DerivedAV import DerivedAV
 
+import random
+import torch
 import numpy as np
 
 def datasetCreation(env:object, num_data:int):
@@ -22,6 +24,11 @@ def datasetCreation(env:object, num_data:int):
 
     # Start
     while len(observations_buffer) < num_data:
+        # seed = 2203 + 100
+        # random.seed(seed)
+        # np.random.seed(seed=seed)
+        # torch.manual_seed(seed)
+
         # Select the agent
         idm_agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_IDM')
         # random_agent = RandomAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Random')
@@ -49,7 +56,8 @@ def datasetCreation(env:object, num_data:int):
         # Loop
         for t in range(horizon):
             # Agent take action
-            _action = agent.actionPerform(state=_observation)
+            _action = agent.actionPerform(state=_observation) 
+            # _action[0] += (0.5 * np.random.random())
             # Take a step in the environment and observes termination. 
             _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
             _accum_reward += _reward

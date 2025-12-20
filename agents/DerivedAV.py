@@ -41,7 +41,7 @@ class DerivedAV:
         self.max_action_space = 1.
         self.min_gap = 2.0
         # self.target_speed = (params_dict['circumference'] - (params_dict['veh_gap_dist']*self.num_veh)) / self.num_veh
-        self.target_speed = 4.25
+        self.target_speed = 5.2
         # Other Variables
         self.reward_append = []  # Used in reward function.
         self.accum_reward_append = []  # Used in reward function.
@@ -246,6 +246,8 @@ class DerivedAV:
         # Perform longitudinal action --> Use 'slowDown' command
         # traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
         _desired_speed = cur_speed + action_long
+        if _desired_speed < 0:
+            _desired_speed = 0
         traci.vehicle.slowDown(vehID=self.veh_id, speed=_desired_speed, duration=duration)
         # Perform lateral action
         if self.lateral_action:

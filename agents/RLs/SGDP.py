@@ -65,7 +65,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=50)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=1., num_step=5, dec_step=5)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -75,7 +75,6 @@ class StochasticGaussianprocessDiffusionPolicy:
         
         # Check for the training record file and the response from user...
         if load:
-            print(load)
             _ans_1 = 'y'
             if not os.path.isfile(self.training_record_path) is True:
                 print(f'{self.tag} There is no exists a training record for this agent !!')

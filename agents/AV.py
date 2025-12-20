@@ -166,6 +166,9 @@ class AutonomousVehicle:
                 else:
                     ran_noise = np.random.random() * noise_factor
                 observation[n] += ran_noise
+        
+        # print(f'{self.veh_tag} observations: {observation}')
+
         return observation
 
     # Action Encoding Method 
@@ -239,14 +242,20 @@ class AutonomousVehicle:
                   ', av_lane: ', state[1])
             # Set a derised speed from (current speed + accel)
 
-        # duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)
-        duration = self.sumo_time_step
+        duration = int(1/self.sumo_time_step)  # 1s/sumo_time_step(0.1s)
+        # duration = self.sumo_time_step
+
         # # Perform longitudinal action --> Use 'slowDown' command
         # traci.vehicle.setAcceleration(vehID=self.veh_id, acceleration=action_long, duration=duration)
+
         # Get current speed of the AV...
         cur_speed = state[0]
         _desired_speed = cur_speed + action_long
+        if _desired_speed < 0:
+            _desired_speed = 0
         traci.vehicle.slowDown(vehID=self.veh_id, speed=_desired_speed, duration=duration)
+        # traci.vehicle.setSpeed(vehID=self.veh_id, speed=_desired_speed)
+
         # Perform lateral action
         if self.lateral_action:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
