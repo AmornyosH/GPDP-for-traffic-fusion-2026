@@ -17,7 +17,8 @@ class mySVGP(torch.nn.Module):
         self.caution_tag = '(GP) !!!!!>'
         self.ENV_CONFIG = params_dict['environment']
         self.params_dict = params_dict
-        self.num_sample = int(params_dict['horizon'] / 1)
+        # self.num_sample = int(params_dict['horizon'] / 1)
+        self.num_sample = dataset['num_sample']
         self.num_inducing = 1000
         self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
         # self.x_dim = 4
