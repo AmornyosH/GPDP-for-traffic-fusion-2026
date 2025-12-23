@@ -208,7 +208,7 @@ class AutonomousVehicle:
                                                       old_max=self.max_action_space,
                                                       new_min=self.min_accel,
                                                       new_max=self.max_accel)
-            if inputs[1] > 0.45 and inputs[1] < 0.52:
+            if inputs[1] > 0.45 and inputs[1] < 0.55:
                 decoded_actions[1] = self.lane_id[0]
             elif inputs[1] < -0.45 and inputs[1] > -0.55:
                 decoded_actions[1] = self.lane_id[1]

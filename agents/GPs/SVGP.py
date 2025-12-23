@@ -166,8 +166,8 @@ class mySVGP(torch.nn.Module):
         # _batch_size = 256
         # _gradient_step = int(self.num_sample//_batch_size)  
         _gradient_step = int(len(self.x_train)//_batch_size)
-        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-02)
+        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-03)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-02 if not online else 1e-03)
         # _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var], lr=1e-02)
         _training_record = 0
         _elbo_append = []
