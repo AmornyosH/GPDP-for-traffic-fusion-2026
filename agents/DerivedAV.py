@@ -183,9 +183,17 @@ class DerivedAV:
                                                       old_max=self.max_accel)
         if self.action_dim > 1:
             if inputs[1] == 0:
-                encoded_actions[1] = np.random.normal(loc=0.5, scale=0.05)
+                encoded_actions[1] = np.random.normal(loc=0.5, scale=0.005)
+                if encoded_actions[1] > 0.55:
+                    encoded_actions[1] = 0.55
+                elif encoded_actions[1] < 0.45:
+                    encoded_actions[1] = 0.45
             else:
-                encoded_actions[1] = np.random.normal(loc=-0.5, scale=0.05)
+                encoded_actions[1] = np.random.normal(loc=-0.5, scale=0.005)
+                if encoded_actions[1] > -0.45:
+                    encoded_actions[1] = -0.45
+                elif encoded_actions[1] < -0.55:
+                    encoded_actions[1] = -0.55
         else:
             if inputs[1] == 0:
                 encoded_actions[0] = encoded_actions[0]

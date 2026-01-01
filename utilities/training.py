@@ -58,12 +58,12 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         agent = AutonomousVehicle(load=True, params_dict=env.params_dict, dataset=dataset, id='my_AV')
 
     # Initialise MDP transitions and others
-    observations_buffer = []
-    actions_buffer = []
-    rewards_buffer = []
-    next_observation_buffer = []
-    truncrated_buffer = []
-    termination_buffer = []
+    # observations_buffer = []
+    # actions_buffer = []
+    # rewards_buffer = []
+    # next_observation_buffer = []
+    # truncrated_buffer = []
+    # termination_buffer = []
     horizon = env.params_dict['horizon']
     trajectory_count = 0  # Trajectory counter
     step_count = 0
@@ -72,10 +72,18 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
     while step_count < total_steps:
         
         # Initialise env.
-        _ = env.reset(veh=agent, num_veh=None)
+        _ = env.reset(veh=agent, num_veh=40)
         _truncrated = False
         _termination = False
         _accum_reward = 0
+
+        # Initialise MDP transitions
+        observations_buffer = []
+        actions_buffer = []
+        rewards_buffer = []
+        next_observation_buffer = []
+        truncrated_buffer = []
+        termination_buffer = []
 
         # Agent observes initial state.
         _observation = agent.getObservation()
@@ -100,6 +108,14 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
             torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation)])
             # truncrated_buffer.append(_truncrated)
             # termination_buffer.append(_termination)
+
+            # Storing transitions
+            observations_buffer.append(_observation)
+            actions_buffer.append(_action)
+            rewards_buffer.append(_reward)
+            next_observation_buffer.append(_next_observation)
+            truncrated_buffer.append(_truncrated)
+            termination_buffer.append(_termination)
 
             # if len(observations_buffer) >= num_data:
             #     break
@@ -127,8 +143,10 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
         # Train GP
         # For SGDP, the GPR model is trained seperately. 
+        agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
+                                                  temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)
-        agent.controller.gp_model.myTraining(total_epoch=10, online=True)
+        agent.controller.gp_model.myOnlineTraining(total_epoch=10)
         # agent.controller.recordSaving(path=agent.controller.training_record_path)
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',

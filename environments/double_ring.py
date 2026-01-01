@@ -90,8 +90,8 @@ class DoubleRing:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
-        # _depart_lane = 0
+        # _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        _depart_lane = 1
         self.prev_depart_lane_index = _depart_lane
         traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=_depart_lane)
         self.veh_id_list.append(veh.veh_id)
@@ -142,7 +142,7 @@ class DoubleRing:
             #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
-            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=4.25)  # AV
+            # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=4.25)  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================

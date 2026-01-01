@@ -29,7 +29,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.params_dict = params_dict
         self.tag = '(SGDP) ----->'
         self.caution_tag = '(SGDP) !!!!!>'
-        self.num_action_candidate = 32
+        self.num_action_candidate = 16
         
         # Getting the dataset...
         if dataset is not None:
@@ -65,7 +65,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=1., num_step=5, dec_step=5)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=20, dec_step=20)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -293,7 +293,7 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # V network Training Method (local)
         def _trainVNetwork(inputs, y_true):
-            _TAU = 0.90
+            _TAU = 0.70
             # Compute gradients
             y_pred_tensor = self.q_2(inputs)
             _td = y_true - y_pred_tensor
@@ -337,6 +337,12 @@ class StochasticGaussianprocessDiffusionPolicy:
         _training_record = self.training_record
         _gp_loss = 0
 
+        # Declare optimizer for the networks (online training)
+        if online:
+            self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-04)
+            self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-04)
+            self.q_2_optimizer = torch.optim.Adam(self.q_2.parameters(), lr=3e-04)
+
         # Set models to training mode.
         self.epsilon_beh.train()
         self.q_1.train()
@@ -375,16 +381,17 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.q_2_optimizer.step()
 
             # Prepare data for diffusion learning
-            rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[_batch_size])
-            encode_t_tensor = self.POS_EMB[rand_t] 
-            epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[_batch_size, self.ACTION_DIM])
-            forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
-            # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
-            diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
-            self.epsilon_optimizer.zero_grad()
-            diffu_loss.backward(retain_graph=True)
-            self.epsilon_optimizer.step()
-            diffu_loss_accum += diffu_loss.tolist()
+            if not online:
+                rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[_batch_size])
+                encode_t_tensor = self.POS_EMB[rand_t] 
+                epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[_batch_size, self.ACTION_DIM])
+                forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
+                # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+                diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+                self.epsilon_optimizer.zero_grad()
+                diffu_loss.backward(retain_graph=True)
+                self.epsilon_optimizer.step()
+                diffu_loss_accum += diffu_loss.tolist()
 
             # Update target networks
             _updateTargetNetworks()

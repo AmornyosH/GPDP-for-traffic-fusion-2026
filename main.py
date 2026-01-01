@@ -48,7 +48,7 @@ def getDataset(path:str):
         dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data)
 
         # Saving the dataset.
-        np.savez(path+f'{_num_data}', **dataset)
+        np.savez(path, **dataset)
         
         # Print Final status
         print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{path}')
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     ENV_NAME = args.env
     NUM_VEH = int(args.density)
     TASK = args.task
-    EXPERT_PATH = 'datasets/dataset_{}.npz'.format(ENV_NAME)
+    EXPERT_PATH = 'datasets/dataset_{}'.format(ENV_NAME)
     UNCERTAINTY = True if args.eval_mode == 'shifted' else False
     RENDERING = True if args.rendering == 'render' else False
     av_id = 'AV_1'

@@ -97,7 +97,7 @@ def bestTrajExtraction(params_dict:dict, dataset:dict):
 def allTrajExtraction(params_dict:dict, dataset:dict):
     # Reduce the resolution of the dataset
     _num_skip = 1
-    _num_samples = 100000
+    _num_samples = 20000
     # _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
     _new_indices = np.arange(_num_samples, step=_num_skip)
     _new_horizon = params_dict['horizon']//_num_skip
@@ -184,6 +184,7 @@ def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
                       'termination': _terminated[_first_idx:_last_idx]})
 
     return _best_dataset
+
 
 def klDivergence(input_1, input_2):
     '''
