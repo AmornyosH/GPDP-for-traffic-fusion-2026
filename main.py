@@ -75,7 +75,7 @@ if __name__ == '__main__':
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
-    parser.add_argument('--gradient_step', default=100000, help='Gradient Step, default:1000000')
+    parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
     parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
     parser.add_argument('--load', action='store_true')

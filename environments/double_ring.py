@@ -51,7 +51,7 @@ class DoubleRing:
     def paramsDict(self):
             return {'environment': self.env_name,
                     'time_step': SUMO_TIMESTEP,
-                    'warmup_time': int(500/SUMO_TIMESTEP),
+                    'warmup_time': int(600/SUMO_TIMESTEP),
                     'one_hour': int(3600/SUMO_TIMESTEP),
                     'horizon': int(1000/SUMO_TIMESTEP),
                     'circumference': self.circumference,

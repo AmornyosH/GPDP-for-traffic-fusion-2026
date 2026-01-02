@@ -42,7 +42,7 @@ def datasetCreation(env:object, num_data:int):
         # Initialise env.
         _num_veh = env.num_veh_config[int(trajectory_count % len(env.num_veh_config))]  # define number of vehicles
         agent.target_speed = (env.circumference - (env.veh_gap_dist*_num_veh/2)) / _num_veh
-        print(agent.target_speed)
+        # print(agent.target_speed)
         _ = env.reset(veh=agent, num_veh=_num_veh)
         _truncrated = False
         _termination = False
