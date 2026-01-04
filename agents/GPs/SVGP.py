@@ -19,8 +19,7 @@ class mySVGP(torch.nn.Module):
         self.params_dict = params_dict
         self.num_sample = dataset['num_sample']
 
-        self.num_inducing = 256
-        self.num_inducing_temp = self.num_inducing
+        self.num_inducing = 1000
 
         self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
         # self.x_dim = 4
@@ -57,12 +56,12 @@ class mySVGP(torch.nn.Module):
             self.training_record = 0  # Training record counter
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=5)
+            _slice_idx = np.arange(stop=self.num_sample, step=1)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
             # Intialise inducing points (Let's fix it first.)
-            self.z_train, self.indexes = self.getInitInducingPoints(x_train=self.x_train[0:2000])
+            self.z_train, self.indexes = self.getInitInducingPoints(x_train=self.x_train)
             # Create hyperparameters
             self.sigma_n = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
             self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
@@ -89,7 +88,7 @@ class mySVGP(torch.nn.Module):
             exit()
 
         # Initialised training kernels (K, K_inv) (For evaluation).
-        self.sigma_p = torch.tensor(1.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
+        self.sigma_p = torch.tensor(2.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 
@@ -106,11 +105,13 @@ class mySVGP(torch.nn.Module):
 
     def prepareTempData(self, temp_states, temp_actions):
         _num_sample = len(temp_states)
-        _slice_idx = np.arange(stop=_num_sample, step=5)
-        self.x_train_temp = torch.tensor(temp_states[_slice_idx])
-        self.y_train_temp = torch.tensor(temp_actions[_slice_idx])
+        _slice_idx = np.arange(stop=_num_sample, step=1)
+        # self.x_train_temp = torch.tensor(temp_states[_slice_idx])
+        # self.y_train_temp = torch.tensor(temp_actions[_slice_idx])
         # self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         # self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
+        self.x_train = torch.tensor(temp_states[_slice_idx])
+        self.y_train = torch.tensor(temp_actions[_slice_idx])
 
     def kernelPreparation(self):
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
@@ -171,8 +172,8 @@ class mySVGP(torch.nn.Module):
         _batch_size = self.num_inducing
  
         _gradient_step = int(len(self.x_train)//_batch_size)
-        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03)
+        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-02)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03 if not online else 1e-03)
         _training_record = 0
         _elbo_append = []
 
@@ -234,20 +235,20 @@ class mySVGP(torch.nn.Module):
             self.training_record += 1
             _training_record += 1
         
-            print('Gradient_Step: ', _training_record, 
-                  ', Loss: ', round(_elbo.tolist(), 4), 
-                  ', Var: ', round(self.q_var.mean().tolist(), 4),
-                  ', Obs_var: ', round(self.sigma_n.tolist(), 4),
-                  ', Time_usage: ', round(time()-_start_time, 4))
+            # print('Gradient_Step: ', _training_record, 
+            #       ', Loss: ', round(_elbo.tolist(), 4), 
+            #       ', Var: ', round(self.q_var.mean().tolist(), 4),
+            #       ', Obs_var: ', round(self.sigma_n.tolist(), 4),
+            #       ', Time_usage: ', round(time()-_start_time, 4))
 
-            self.recordSaving(path=self.training_record_path)
+            self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
 
         # self.z_train_all = torch.concat([self.z_train, self.z_train_temp], dim=0)
         # self.q_mean_all = torch.concat([self.q_mean, self.q_mean_temp], dim=0)
         # self.q_var_all = torch.concat([self.q_var, self.q_var_temp], dim=0)
 
         self.training_record += _training_record
-        self.recordSaving(path=self.training_record_path)
+        self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 

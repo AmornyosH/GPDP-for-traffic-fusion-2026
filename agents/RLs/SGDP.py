@@ -212,7 +212,7 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.mu_r = _mu_r
             self.mu_r = torch.clip(input=_mu_r, min=self.MIN_DIFFU_SPACE, max=self.MAX_DIFFU_SPACE)
             self.var_r = _var_r
-            print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
+            # print(f'{self.tag} GP_mean: ', self.mu_r, ', GP_var: ', self.var_r)
 
         # Start reverse processes
         for i in range(self.DEC_DIFFU_STEPS): 

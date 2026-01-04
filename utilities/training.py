@@ -52,7 +52,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
         agent.recordSaving(path=agent.training_record_path)
 
 # ========== Online Training
-def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):
+def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
@@ -88,6 +88,10 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
         # Agent observes initial state.
         _observation = agent.getObservation()
+
+        # Initialise Imposter Vehicle
+        _impos_veh_id = env.initImposter(av_lane=_observation[1])
+
 
         # Interaction Loop
         for t in range(horizon):
@@ -132,6 +136,9 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
             #     #   ' Time: ', round(time()-_start_time, 2)
             #     )
 
+            if t >= horizon*0.2 and imposter:
+                env.setImposterSpeed(id=_impos_veh_id)
+
             # Assign new state
             _observation = _next_observation
             step_count += 1
@@ -148,7 +155,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
                                                   temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)
         # agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train_original)
-        agent.controller.gp_model.myOnlineTraining(total_epoch=10)
+        agent.controller.gp_model.myTraining(total_epoch=10, online=True)
         # agent.controller.recordSaving(path=agent.controller.training_record_path)
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',

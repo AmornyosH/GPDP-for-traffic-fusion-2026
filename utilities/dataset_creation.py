@@ -26,7 +26,7 @@ def datasetCreation(env:object, num_data:int):
     while len(observations_buffer) < num_data:
         # Select the agent
         idm_agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_IDM')
-        # random_agent = RandomAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Random')
+        random_agent = RandomAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Random')
         derived_agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
 
         # We need to select the agent before reset the env. 
@@ -35,8 +35,10 @@ def datasetCreation(env:object, num_data:int):
             # agent = idm_agent
             agent = derived_agent
         else:
-            # agent = random_agent
-            agent = idm_agent
+            if len(observations_buffer) > (num_data // 1.5):
+                agent = random_agent
+            else:
+                agent = idm_agent
             # agent = derived_agent
 
         # Initialise env.
@@ -56,6 +58,7 @@ def datasetCreation(env:object, num_data:int):
             # Agent take action
             _action = agent.actionPerform(state=_observation) 
             _action[0] += (0.05 * np.random.random())
+            
             # Take a step in the environment and observes termination. 
             _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
             _accum_reward += _reward

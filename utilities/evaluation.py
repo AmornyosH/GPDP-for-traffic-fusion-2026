@@ -5,8 +5,7 @@ from agents.IDM import IDM
 from agents.RandomAV import RandomAV
 from agents.AV import AutonomousVehicle
 
-def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool):
-    print(load)
+def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, imposter:bool=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
@@ -23,13 +22,16 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool):
     trajectory_count = 0  # Trajectory counter
 
     # Initialise env.
-    _ = env.reset(veh=agent, num_veh=num_veh)
+    _ = env.reset(veh=agent, num_veh=num_veh, imposter=imposter)
     _truncrated = False
     _termination = False
     _accum_reward = 0
 
     # Agent observation initial state
     _observation = agent.getObservation()
+
+    # Initialise Imposter Vehicle
+    _impos_veh_id = env.initImposter(av_lane=_observation[1])
 
     # Loop
     for t in range(horizon):
@@ -54,6 +56,9 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool):
 
         # if len(observations_buffer) >= num_data:
         #     break
+
+        if t >= horizon*0.2 and imposter:
+            env.setImposterSpeed(id=_impos_veh_id)
 
         # Assign new state
         _observation = _next_observation

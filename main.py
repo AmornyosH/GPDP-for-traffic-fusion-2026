@@ -124,7 +124,8 @@ if __name__ == '__main__':
                                                        alg=args.alg,
                                                        cont=False, 
                                                        dataset=dataset, 
-                                                       total_steps=int(args.gradient_step))
+                                                       total_steps=int(args.gradient_step), 
+                                                       imposter=True)
     
     # ========== Testing (Evaluation)
     if args.task == 'testing':
@@ -132,7 +133,8 @@ if __name__ == '__main__':
                                              num_veh=40,
                                              alg=args.alg,
                                              dataset=dataset,
-                                             load=args.load)
+                                             load=args.load, 
+                                             imposter=UNCERTAINTY)
         print(f'{main_tag}', 'Evaluation for', f'{args.alg}', 'is completed.')
         print(f'{main_tag}', 'The return is ', f'{_return}', '.')
         print(f'{main_tag}', 'Exit Gracefully. Goodbye.')

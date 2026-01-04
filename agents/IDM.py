@@ -232,7 +232,8 @@ class IDM:
         # The SUMO will automatically do all the work. 
         # Here, we just extract those actions from SUMO and return to keep them in replay buffer. 
         action_long = traci.vehicle.getAcceleration(vehID=self.veh_id)
-        action_lat = traci.vehicle.getLaneIndex(vehID=self.veh_id) if lane_id is None else lane_id
+        # action_lat = traci.vehicle.getLaneIndex(vehID=self.veh_id) if lane_id is None else lane_id
+        action_lat = np.random.randint(2)
         action_sample = self.actionEncoding(action_long, action_lat)
         # Print the select actions
         if s_print:
