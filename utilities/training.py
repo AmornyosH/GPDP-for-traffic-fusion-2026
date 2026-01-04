@@ -46,9 +46,9 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     # GP training.
     if agent.ALG == 'SGDP':
         # For SGDP, the GPR model is trained seperately. 
-        # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-        agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
-        agent.gp_model.myTraining(total_epoch=500)
+        agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
+        # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
+        agent.gp_model.myTraining(total_epoch=256)
         agent.recordSaving(path=agent.training_record_path)
 
 # ========== Online Training

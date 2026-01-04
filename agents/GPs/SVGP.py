@@ -88,7 +88,7 @@ class mySVGP(torch.nn.Module):
             exit()
 
         # Initialised training kernels (K, K_inv) (For evaluation).
-        self.sigma_p = torch.tensor(2.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
+        self.sigma_p = torch.tensor(1.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
 
