@@ -125,7 +125,7 @@ if __name__ == '__main__':
                                                        cont=False, 
                                                        dataset=dataset, 
                                                        total_steps=int(args.gradient_step), 
-                                                       imposter=True)
+                                                       imposter=UNCERTAINTY)
     
     # ========== Testing (Evaluation)
     if args.task == 'testing':

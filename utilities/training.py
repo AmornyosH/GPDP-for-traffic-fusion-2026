@@ -107,10 +107,10 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
                 _termination = True # Set termination true just for now.
 
             # Storing transitions
-            torch.vstack([agent.controller.state_buffer, torch.tensor(_observation.reshape(1, -1))])
-            torch.vstack([agent.controller.action_buffer, torch.tensor(_action)])
-            torch.vstack([agent.controller.reward_buffer, torch.tensor(_reward)])
-            torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation)])
+            torch.vstack([agent.controller.state_buffer, torch.tensor(_observation, dtype=torch.float32).reshape(1, -1)])
+            torch.vstack([agent.controller.action_buffer, torch.tensor(_action, dtype=torch.float32).reshape(1, -1)])
+            torch.vstack([agent.controller.reward_buffer, torch.tensor(_reward, dtype=torch.float32)])
+            torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation, dtype=torch.float32)])
             # truncrated_buffer.append(_truncrated)
             # termination_buffer.append(_termination)
 
@@ -149,6 +149,22 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         # Close the SUMO connection. (To not show error message)
         env.close()
 
+        # # Storing transitions
+        # torch.vstack(agent.controller.state_buffer)
+        # torch.vstack(agent.controller.action_buffer)
+        # torch.vstack(agent.controller.reward_buffer)
+        # torch.vstack(agent.controller.next_state_buffer)
+        # # truncrated_buffer.append(_truncrated)
+        # # termination_buffer.append(_termination)
+
+        # Print summary status.
+        print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
+                                                    ', Avg_raw_return: ', round(_accum_reward, PRECISION),
+                                                    ', Num_vehicles: ', len(env.veh_id_list), 
+                                                    ', Depart_lane: ', _observation[1])
+
+        # _training_results = agent.controller.training(steps=10000, online=True)
+
         # Train GP
         # For SGDP, the GPR model is trained seperately. 
         agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
@@ -167,11 +183,11 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
             #   ' Time: ', round(time()-_start_time, 2)
             )
 
-        # Print summary status.
-        print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
-                                                    ', Avg_raw_return: ', round(_accum_reward, PRECISION),
-                                                    ', Num_vehicles: ', len(env.veh_id_list), 
-                                                    ', Depart_lane: ', _observation[1])
+        # # Print summary status.
+        # print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
+        #                                             ', Avg_raw_return: ', round(_accum_reward, PRECISION),
+        #                                             ', Num_vehicles: ', len(env.veh_id_list), 
+        #                                             ', Depart_lane: ', _observation[1])
     
     return _accum_reward
     ...
