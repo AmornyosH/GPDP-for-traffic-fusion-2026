@@ -92,7 +92,6 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         # Initialise Imposter Vehicle
         _impos_veh_id = env.initImposter(av_lane=_observation[1])
 
-
         # Interaction Loop
         for t in range(horizon):
             # Agent take action
@@ -138,6 +137,9 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
+                if (t % horizon*0.2) == 0:
+                    env.initImposter(av_lane=_observation[1])
+                    print('changed!')
 
             # Assign new state
             _observation = _next_observation

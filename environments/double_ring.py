@@ -171,26 +171,28 @@ class DoubleRing:
 
     # --------- Initialise imposter vehicle parameters (If noise_inj == True)
     def initImposter(self, av_lane):
+        traci.vehicle.setSpeed(vehID=self.impos_veh_id, speed=-1) if self.impos_veh_id is not None else ...
         _lane_id = traci.lane.getIDList()
         _av_lane = int(av_lane)
-        _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
-        # if traci.lane.getLastStepVehicleIDs(laneID=impos_lane) == ():  # Check if there is any vehicle on the current lane of AV
-        #     # ++++++ If there is no vehicle on the current lane of AV, there must be vehicle on the opposite site (left-right).
-        #     if av_lane == 0:  # If AV is currently on the outer lane.
-        #         impos_lane = lane_id[2]  # check imposter lane on 
-        #     elif av_lane == 1:
-        #         impos_lane = lane_id[3]
+        # _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
+        _impos_lane = np.random.choice(_lane_id)
+        _veh_in_lane = traci.lane.getLastStepVehicleIDs(laneID=_impos_lane)
+        while _veh_in_lane == ():  # Check if there is any vehicle on the current lane of AV
+            _impos_lane = np.random.choice(_lane_id)
+            _veh_in_lane = traci.lane.getLastStepVehicleIDs(laneID=_impos_lane)
         # --------- Retrieve the imposter vehicle id.
         _impos_veh_id = np.random.choice(traci.lane.getLastStepVehicleIDs(laneID=_impos_lane))
         while _impos_veh_id == 'AV':
             _impos_veh_id = np.random.choice(traci.lane.getLastStepVehicleIDs(laneID=_impos_lane))
         impos_veh_speed = -1  # Initialise imposter's speed with SUMO controlled first.
+        self.impos_veh_id = _impos_veh_id
 
         return _impos_veh_id
 
     def setImposterSpeed(self, id):
         impos_veh_speed = 0.5  # Slow the imposter vehicle down.
         traci.vehicle.setSpeed(vehID=id, speed=impos_veh_speed)  
+        # traci.vehicle.slowDown(vehID=id, speed=impos_veh_speed, duration=SUMO_TIMESTEP) 
 
     def assignActions(self, action):
         # Acceleration

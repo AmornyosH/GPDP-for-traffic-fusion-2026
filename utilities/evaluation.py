@@ -59,6 +59,9 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
 
         if t >= horizon*0.2 and imposter:
             env.setImposterSpeed(id=_impos_veh_id)
+            if t % (horizon*0.1) == 0:
+                env.initImposter(av_lane=_observation[1])
+                print("changed!")
 
         # Assign new state
         _observation = _next_observation

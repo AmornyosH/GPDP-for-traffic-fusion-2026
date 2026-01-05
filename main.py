@@ -72,12 +72,12 @@ if __name__ == '__main__':
     # ========== Define arguments parser. 
     parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_ITS PyTorch Args')
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
-    parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
+    parser.add_argument('--density', default=40, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
-    parser.add_argument('--rendering', default='no-render', help='Rendering: [render, no-render], default:no-render')
+    parser.add_argument('--render', action='store_true', help='render the simulation')
     parser.add_argument('--load', action='store_true')
     args = parser.parse_args()
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     TASK = args.task
     EXPERT_PATH = 'datasets/dataset_{}'.format(ENV_NAME)
     UNCERTAINTY = True if args.eval_mode == 'shifted' else False
-    RENDERING = True if args.rendering == 'render' else False
+    RENDERING = args.render
     av_id = 'AV_1'
     main_tag = '(main) ----->'
     caution_tag = '(main) !!!!!>'
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     # ========== Testing (Evaluation)
     if args.task == 'testing':
         _return = evaluation.sumoInteraction(env=env,
-                                             num_veh=40,
+                                             num_veh=int(args.density),
                                              alg=args.alg,
                                              dataset=dataset,
                                              load=args.load, 

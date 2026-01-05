@@ -110,8 +110,8 @@ class mySVGP(torch.nn.Module):
         # self.y_train_temp = torch.tensor(temp_actions[_slice_idx])
         # self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
         # self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
-        self.x_train = torch.tensor(temp_states[_slice_idx])
-        self.y_train = torch.tensor(temp_actions[_slice_idx])
+        self.x_train = torch.tensor(temp_states[_slice_idx], dtype=torch.float32)
+        self.y_train = torch.tensor(temp_actions[_slice_idx], dtype=torch.float32)
 
     def kernelPreparation(self):
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
