@@ -59,12 +59,6 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         agent = AutonomousVehicle(load=True, params_dict=env.params_dict, dataset=dataset, id='my_AV')
 
     # Initialise MDP transitions and others
-    # observations_buffer = []
-    # actions_buffer = []
-    # rewards_buffer = []
-    # next_observation_buffer = []
-    # truncrated_buffer = []
-    # termination_buffer = []
     horizon = env.params_dict['horizon']
     trajectory_count = 0  # Trajectory counter
     step_count = 0
@@ -96,6 +90,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         for t in range(horizon):
             # Agent take action
             _action = agent.actionPerform(state=_observation, s_print=False)
+            # _action = agent.actionPerform(state=_observation, s_print=True)
 
             # Take a step in the environment and observes termination. 
             _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
@@ -108,10 +103,8 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
             # Storing transitions
             torch.vstack([agent.controller.state_buffer, torch.tensor(_observation, dtype=torch.float32).reshape(1, -1)])
             torch.vstack([agent.controller.action_buffer, torch.tensor(_action, dtype=torch.float32).reshape(1, -1)])
-            torch.vstack([agent.controller.reward_buffer, torch.tensor(_reward, dtype=torch.float32)])
-            torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation, dtype=torch.float32)])
-            # truncrated_buffer.append(_truncrated)
-            # termination_buffer.append(_termination)
+            torch.vstack([agent.controller.reward_buffer, torch.tensor(_reward, dtype=torch.float32).reshape(1, 1)])
+            torch.vstack([agent.controller.next_state_buffer, torch.tensor(_next_observation, dtype=torch.float32).reshape(1, -1)])
 
             # Storing transitions
             observations_buffer.append(_observation)
@@ -138,7 +131,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
                 if (t % horizon*0.2) == 0:
-                    env.initImposter(av_lane=_observation[1])
+                    _impos_veh_id = env.initImposter(av_lane=_observation[1])
                     print('changed!')
 
             # Assign new state
@@ -172,9 +165,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
                                                   temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)
-        # agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train_original)
         agent.controller.gp_model.myTraining(total_epoch=10, online=True)
-        # agent.controller.recordSaving(path=agent.controller.training_record_path)
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',
             f' Gradient Step: {agent.controller.training_step_counter}',
