@@ -110,12 +110,14 @@ class AutonomousVehicle:
         # Get the leader and follower info
         candidate_neigh_leader = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
         candidate_neigh_follower = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+
         # if candidate_neigh_leader[1] >= 0.00:
         #     self.neighbor_leader_veh = candidate_neigh_leader
         # if candidate_neigh_follower[1] >= 0.00:
         #     self.neighbor_follower_veh = candidate_neigh_follower
         # self.neighbor_leader_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
         # self.neighbor_follower_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+
         # Check if there is a neighbor leader ?
         if len(candidate_neigh_leader) != 0:
             # Yes -- There is
@@ -126,8 +128,8 @@ class AutonomousVehicle:
                 self.neighbor_leader_veh = neigh_leader
 
             # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh[0] is not '' else ... # Assign colour to detected vehicles.
-            observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0])
-            observation[7] = self.neighbor_leader_veh[1]
+            observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0]) if self.neighbor_leader_veh[0] is not None else self.max_speed
+            observation[7] = self.neighbor_leader_veh[1] if self.neighbor_leader_veh[1] is not None else self.detect_dist
         else:
             # No -- There is not
             observation[6] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
