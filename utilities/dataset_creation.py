@@ -6,7 +6,7 @@ import random
 import torch
 import numpy as np
 
-def datasetCreation(env:object, num_data:int):
+def datasetCreation(env:object, num_data:int, type:str='expert'):
     horizon = env.params_dict['horizon']
     # # Initialise vehicle's objects
     # idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')
@@ -30,16 +30,58 @@ def datasetCreation(env:object, num_data:int):
         derived_agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
 
         # We need to select the agent before reset the env. 
-        if len(observations_buffer) < (num_data // 2):
-            # Start with IDM
-            # agent = idm_agent
-            agent = derived_agent
-        else:
-            if len(observations_buffer) > (num_data // 1.5):
-                agent = random_agent
-            else:
-                agent = idm_agent
+        if type == 'expert':
             # agent = derived_agent
+            # We need to select the agent before reset the env. 
+            if len(observations_buffer) < (num_data // 2):
+                # Start with IDM
+                # agent = idm_agent
+                agent = derived_agent
+            else:
+                if len(observations_buffer) > (num_data // 1.5):
+                    agent = random_agent
+                else:
+                    agent = idm_agent
+                    
+        elif type == 'human-expert':
+            # We need to select the agent before reset the env. 
+            if len(observations_buffer) < (num_data // 2):
+                # Start with IDM
+                # agent = idm_agent
+                agent = derived_agent
+            else:
+                if len(observations_buffer) > (num_data // 1.5):
+                    agent = random_agent
+                else:
+                    agent = idm_agent
+
+        elif type == 'human-random':
+            # We need to select the agent before reset the env. 
+            if len(observations_buffer) < (num_data // 2):
+                # Start with IDM
+                agent = idm_agent
+                # agent = derived_agent
+            else:
+                # if len(observations_buffer) > (num_data // 1.5):
+                #     agent = random_agent
+                # else:
+                #     agent = idm_agent
+                # agent = derived_agent
+                agent = random_agent
+
+        elif type == 'human':
+            # We need to select the agent before reset the env. 
+            if len(observations_buffer) < (num_data // 2):
+                # Start with IDM
+                agent = idm_agent
+                # agent = derived_agent
+            else:
+                # if len(observations_buffer) > (num_data // 1.5):
+                #     agent = random_agent
+                # else:
+                #     agent = idm_agent
+                # agent = derived_agent
+                agent = random_agent
 
         # Initialise env.
         _num_veh = env.num_veh_config[int(trajectory_count % len(env.num_veh_config))]  # define number of vehicles
