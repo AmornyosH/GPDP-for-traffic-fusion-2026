@@ -65,7 +65,12 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
     # 
     while step_count < total_steps:
-        
+        seed = 2203
+        # random.seed(seed)
+        np.random.seed(seed=seed)
+        torch.manual_seed(seed)
+
+
         # Initialise env.
         _ = env.reset(veh=agent, num_veh=40)
         _truncrated = False
