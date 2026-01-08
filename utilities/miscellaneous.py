@@ -130,7 +130,7 @@ def allTrajExtraction(params_dict:dict, dataset:dict):
                       'next_observations': _next_state, 
                       'truncrated': _truncrated,
                       'termination': _terminated})
-
+    # print(np.sum(_reward))
     return _best_dataset
 
 # Interval Trajectory Extraction For GP Method

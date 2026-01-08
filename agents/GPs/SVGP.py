@@ -131,6 +131,7 @@ class mySVGP(torch.nn.Module):
         X_2 = torch.tensor(X_2, dtype=torch.float32) if not torch.is_tensor(X_2) else X_2
         # print(X_1.size(), self.ell.size())
         kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1/self.ell, X_2/self.ell)**2)/2)
+        kernel = torch.abs(kernel)
         if noise:
             # Noisy observation
             kernel += ((self.sigma_n**2) * torch.eye(len(X_1)))
@@ -168,7 +169,7 @@ class mySVGP(torch.nn.Module):
 
         return _mean, _var
     
-    def myTraining(self, total_epoch:int, online:bool=False):
+    def myTraining(self, total_epoch:int, s_print:bool=False, online:bool=False):
         # _batch_size = self.num_sample if not ft else self.x_train.size()[0]  # minibatch size is the whole dataset.
         _batch_size = self.num_inducing
  
@@ -236,11 +237,12 @@ class mySVGP(torch.nn.Module):
             self.training_record += 1
             _training_record += 1
         
-            # print('Gradient_Step: ', _training_record, 
-            #       ', Loss: ', round(_elbo.tolist(), 4), 
-            #       ', Var: ', round(self.q_var.mean().tolist(), 4),
-            #       ', Obs_var: ', round(self.sigma_n.tolist(), 4),
-            #       ', Time_usage: ', round(time()-_start_time, 4))
+            if s_print:
+                print('Gradient_Step: ', _training_record, 
+                    ', Loss: ', round(_elbo.tolist(), 4), 
+                    ', Var: ', round(self.q_var.mean().tolist(), 4),
+                    ', Obs_var: ', round(self.sigma_n.tolist(), 4),
+                    ', Time_usage: ', round(time()-_start_time, 4))
 
             self.recordSaving(path=self.training_record_path if not online else self.online_training_record_path)
 
