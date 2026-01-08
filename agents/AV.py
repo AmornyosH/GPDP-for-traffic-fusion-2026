@@ -15,7 +15,7 @@ from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
 
 
 class AutonomousVehicle:
-    def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV'):
+    def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV', online:bool=False):
         self.load = load
         self.veh_id = id
         self.veh_type = 'my_AV'
@@ -35,7 +35,7 @@ class AutonomousVehicle:
         self.lateral_action = params_dict['lateral_action']
         self.max_speed = 10.
         self.min_speed = 0.
-        self.detect_dist = 100.
+        self.detect_dist = 200.
         self.min_accel = -1.5  # It is a 'deceleration' but using the word min accel instead.
         self.max_accel = 1.0
         self.min_action_space = -1.
@@ -53,7 +53,7 @@ class AutonomousVehicle:
         self.previous_action = np.array([0.00, 0.00])
 
         # Initialise High Level control algorithm 
-        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load)
+        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
 
     # Observation Method
     def getObservation(self, noise=False):

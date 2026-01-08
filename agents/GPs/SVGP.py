@@ -9,7 +9,7 @@ if CUDA:
 # CUDA = False
 
 class mySVGP(torch.nn.Module):
-    def __init__(self, parent_alg:str, params_dict:dict, dataset:dict, cuda:bool=False):
+    def __init__(self, parent_alg:str, params_dict:dict, dataset:dict, cuda:bool=False, online:bool=False):
         super().__init__()
         self.parent_alg = parent_alg
         self.ALG = 'SVGP'
@@ -71,7 +71,8 @@ class mySVGP(torch.nn.Module):
         elif _ans_1 == 'y' or _ans_1=='Y' or _ans_1=='Yes' or _ans_1=='YES':
             print(f'{self.tag} Load training record.')
             # Load training records
-            _training_records = torch.load(self.training_record_path, weights_only=False, map_location=torch.device('cuda' if cuda else 'cpu'))
+            _training_records = torch.load(self.training_record_path if not online else self.online_training_record_path, 
+                                           weights_only=False, map_location=torch.device('cuda' if cuda else 'cpu'))
             self.mll_append = _training_records['loss_append']  # Loss append
             self.training_record = _training_records['training_record']  # Training record counter
             _state_dict = _training_records['state_dict']

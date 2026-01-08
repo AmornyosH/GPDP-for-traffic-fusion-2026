@@ -56,7 +56,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
-        agent = AutonomousVehicle(load=True, params_dict=env.params_dict, dataset=dataset, id='my_AV')
+        agent = AutonomousVehicle(load=True, online=False, params_dict=env.params_dict, dataset=dataset, id='my_AV')
 
     # Initialise MDP transitions and others
     horizon = env.params_dict['horizon']
@@ -135,9 +135,9 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
-                if (t % horizon*0.2) == 0:
-                    _impos_veh_id = env.initImposter(av_lane=_observation[1])
-                    print('changed!')
+                # if (t % horizon*0.2) == 0:
+                #     _impos_veh_id = env.initImposter(av_lane=_observation[1])
+                #     print('changed!')
 
             # Assign new state
             _observation = _next_observation
