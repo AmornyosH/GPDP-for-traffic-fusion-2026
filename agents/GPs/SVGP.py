@@ -113,6 +113,8 @@ class mySVGP(torch.nn.Module):
         # self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
         self.x_train = torch.tensor(temp_states[_slice_idx], dtype=torch.float32)
         self.y_train = torch.tensor(temp_actions[_slice_idx], dtype=torch.float32)
+        # Intialise inducing points (Let's fix it first.)
+        self.z_train, self.indexes = self.getInitInducingPoints(x_train=self.x_train)
 
     def kernelPreparation(self):
         self.K_mm = self.rbfKernel(X_1=self.z_train, X_2=self.z_train, noise=True)
@@ -175,7 +177,7 @@ class mySVGP(torch.nn.Module):
  
         _gradient_step = int(len(self.x_train)//_batch_size)
         _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-02)
-        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03 if not online else 1e-03)
+        _ind_optimizer = torch.optim.Adam([self.q_mean, self.q_var, self.z_train], lr=1e-03 if not online else 1e-04)
         _training_record = 0
         _elbo_append = []
 
