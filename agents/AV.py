@@ -51,6 +51,8 @@ class AutonomousVehicle:
         self.neighbor_leader_veh = None
         self.neighbor_follower_veh = None
         self.previous_action = np.array([0.00, 0.00])
+        self.previous_action_long = 0
+        self.previous_action_lat = 0
 
         # Initialise High Level control algorithm 
         self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
@@ -236,14 +238,20 @@ class AutonomousVehicle:
         return decoded_actions
     
     # Action Performing Method
-    def actionPerform(self, state, s_print:bool=False, lane_id:int=None):
+    def actionPerform(self, state, s_print:bool=False, lane_id:int=None, pred=False):
         # Random agent will random actions both longitudinal and lateral.
-        _pred = self.controller.predict(state=state, size=1, guide=True)
-        _pred = self.actionDecoding(_pred.tolist()[0])
-        action_long = _pred[0]
-        action_lat = _pred[1]
-        # print('Random acc: ', action_long, ', Random lane: ', action_lat)
-        action_sample = self.actionEncoding(action_long, action_lat)
+        if pred:
+            _pred = self.controller.predict(state=state, size=1, guide=True)
+            _pred = self.actionDecoding(_pred.tolist()[0])
+            action_long = _pred[0]
+            action_lat = _pred[1]
+            # print('Random acc: ', action_long, ', Random lane: ', action_lat)
+            action_sample = self.actionEncoding(action_long, action_lat)
+        else:
+            action_long = self.previous_action_long
+            action_lat = self.previous_action_lat
+            action_sample = self.previous_action
+
         # Print the select actions
         if s_print:
             print('action_sample: ', action_sample,
@@ -267,10 +275,14 @@ class AutonomousVehicle:
         traci.vehicle.slowDown(vehID=self.veh_id, speed=_desired_speed, duration=duration)
         # traci.vehicle.setSpeed(vehID=self.veh_id, speed=_desired_speed)
 
-        # Perform lateral action
-        if self.lateral_action:
-            traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
+        # # Perform lateral action
+        # if self.lateral_action:
+        #     traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
+
         self.previous_action = action_sample
+        self.previous_action_long = action_long
+        self.previous_action_lat = action_lat
+
         return action_sample
 
     # Next Observation and Raw reward Method

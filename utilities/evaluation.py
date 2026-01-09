@@ -36,7 +36,10 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
     # Loop
     for t in range(horizon):
         # Agent take action
-        _action = agent.actionPerform(state=_observation, s_print=False)
+        if t % (1) == 0:
+            _action = agent.actionPerform(state=_observation, s_print=True, pred=True)
+        else:
+            _action = agent.actionPerform(state=_observation, s_print=False, pred=False)
         # _action = agent.actionPerform(state=_observation, s_print=True)
 
         # Take a step in the environment and observes termination. 
@@ -60,9 +63,9 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
 
         if t >= horizon*0.2 and imposter:
             env.setImposterSpeed(id=_impos_veh_id)
-            if t % (horizon*0.1) == 0:
-                _impos_veh_id = env.initImposter(av_lane=_observation[1])
-                print("changed!")
+            # if t % (horizon*0.1) == 0:
+            #     _impos_veh_id = env.initImposter(av_lane=_observation[1])
+            #     print("changed!")
 
         # Assign new state
         _observation = _next_observation

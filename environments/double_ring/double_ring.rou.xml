@@ -21,14 +21,18 @@
     lcStrategic="1.0"
     lcCooperative="1.0"
     lcCooperativeSpeed="1.0"
-    lcSpeedGain="0.1"
+    lcSpeedGain="0.05"
     lcKeepRight="1.0"
-    lcAssertive="0.1"
+    lcAssertive="0.05"
     color="255,255,255"/>
 
     <!-- IDM Before -->
     <!-- lcSpeedGain="1.0" -->
     <!-- lcAssertive="1.0" -->
+
+    <!-- My Tune -->
+    <!-- lcSpeedGain="0.1" -->
+    <!-- lcAssertive="0.1" -->
 
     <!-- Controlled -->
     <vType id="my_AV"
