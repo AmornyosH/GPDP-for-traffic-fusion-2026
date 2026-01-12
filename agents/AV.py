@@ -238,7 +238,7 @@ class AutonomousVehicle:
         return decoded_actions
     
     # Action Performing Method
-    def actionPerform(self, state, s_print:bool=False, lane_id:int=None, pred=False):
+    def actionPerform(self, state, s_print:bool=False, lane_id:int=None, pred=True):
         # Random agent will random actions both longitudinal and lateral.
         if pred:
             _pred = self.controller.predict(state=state, size=1, guide=True)
@@ -275,9 +275,9 @@ class AutonomousVehicle:
         traci.vehicle.slowDown(vehID=self.veh_id, speed=_desired_speed, duration=duration)
         # traci.vehicle.setSpeed(vehID=self.veh_id, speed=_desired_speed)
 
-        # # Perform lateral action
-        # if self.lateral_action:
-        #     traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
+        # Perform lateral action
+        if self.lateral_action:
+            traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
 
         self.previous_action = action_sample
         self.previous_action_long = action_long

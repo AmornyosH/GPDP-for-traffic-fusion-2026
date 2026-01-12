@@ -42,14 +42,13 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               ' GP-Loss: ', round(_training_results['gp_loss'], PRECISION) if _training_results.get('gp_loss') is not None else '',
               ' Time: ', round(time()-_start_time, PRECISION)
               )
-        
+    
     # GP training.
+    agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
     if agent.ALG == 'SGDP':
-        # For SGDP, the GPR model is trained seperately. 
-        agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-        # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
-        agent.gp_model.myTraining(total_epoch=256, s_print=True)
-        agent.recordSaving(path=agent.training_record_path)
+        agent.gp_model.myTraining(total_epoch=2000, s_print=True)
+    agent.recordSaving(path=agent.training_record_path)
+
 
 # ========== Online Training
 def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):
@@ -69,7 +68,6 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         # random.seed(seed)
         np.random.seed(seed=seed)
         torch.manual_seed(seed)
-
 
         # Initialise env.
         _ = env.reset(veh=agent, num_veh=40)
@@ -167,10 +165,10 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
 
         # Train GP
         # For SGDP, the GPR model is trained seperately. 
-        agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
-                                                  temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
+        # agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
+        #                                           temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)
-        agent.controller.gp_model.myTraining(total_epoch=10, online=True)
+        agent.controller.gp_model.myTraining(total_epoch=1000, online=True)
 
         print(f'{TAG} Epoch: {agent.controller.training_record},',
             f' Gradient Step: {agent.controller.training_step_counter}',

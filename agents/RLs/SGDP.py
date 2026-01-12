@@ -16,6 +16,7 @@ if CUDA:
 from utilities import MLP
 from utilities import miscellaneous as misc
 from agents.GPs.SVGP import mySVGP
+from agents.GPs.exactGP import myExactGP
 from time import time
 import numpy as np
 import os
@@ -129,7 +130,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         best_dataset = misc.allTrajExtraction(params_dict=params_dict, dataset=dataset) if dataset is not None else None
         # best_dataset = dataset
         
-        self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
+        # self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
+        self.gp_model = myExactGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
 
     # Training Record Loading Method
     def loadTrainingRecord(self):
@@ -345,9 +347,9 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # Declare optimizer for the networks (online training)
         if online:
-            self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-04)
-            self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-04)
-            self.q_2_optimizer = torch.optim.Adam(self.q_2.parameters(), lr=3e-04)
+            self.epsilon_optimizer = torch.optim.Adam(self.epsilon_beh.parameters(), lr=3e-05)
+            self.q_1_optimizer = torch.optim.Adam(self.q_1.parameters(), lr=3e-05)
+            self.q_2_optimizer = torch.optim.Adam(self.q_2.parameters(), lr=3e-05)
             buffer_size = len(self.state_buffer)
 
         # Set models to training mode.

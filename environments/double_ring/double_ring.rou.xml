@@ -21,9 +21,9 @@
     lcStrategic="1.0"
     lcCooperative="1.0"
     lcCooperativeSpeed="1.0"
-    lcSpeedGain="0.05"
+    lcSpeedGain="0.01"
     lcKeepRight="1.0"
-    lcAssertive="0.05"
+    lcAssertive="0.01"
     color="255,255,255"/>
 
     <!-- IDM Before -->

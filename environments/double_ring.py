@@ -144,7 +144,7 @@ class DoubleRing:
             #     _accel = traci.vehicle.getAcceleration(vehID=str(i))
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
-            traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
+            # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
@@ -174,8 +174,8 @@ class DoubleRing:
         traci.vehicle.setSpeed(vehID=self.impos_veh_id, speed=-1) if self.impos_veh_id is not None else ...
         _lane_id = traci.lane.getIDList()
         _av_lane = int(av_lane)
-        _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
-        # _impos_lane = np.random.choice(_lane_id)
+        # _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
+        _impos_lane = np.random.choice(_lane_id)
         _veh_in_lane = traci.lane.getLastStepVehicleIDs(laneID=_impos_lane)
         while _veh_in_lane == ():  # Check if there is any vehicle on the current lane of AV
             _impos_lane = np.random.choice(_lane_id)
