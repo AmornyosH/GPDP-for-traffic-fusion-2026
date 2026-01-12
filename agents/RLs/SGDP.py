@@ -389,20 +389,20 @@ class StochasticGaussianprocessDiffusionPolicy:
             self.q_1_optimizer.step()
             self.q_2_optimizer.step()
 
-            # # Prepare data for diffusion learning
-            # # if not online:
-            # rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[len(batch_action_tensor)])
-            # encode_t_tensor = self.POS_EMB[rand_t] 
-            # epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[len(batch_action_tensor), self.ACTION_DIM])
-            # forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
+            # Prepare data for diffusion learning
+            if not online:
+                rand_t = torch.randint(low=0, high=self.DIFFU_STEPS, size=[len(batch_action_tensor)])
+                encode_t_tensor = self.POS_EMB[rand_t] 
+                epsilon_tensor = torch.normal(mean=self.DIFFU_MEAN, std=self.DIFFU_STD, size=[len(batch_action_tensor), self.ACTION_DIM])
+                forward_action_tensor = self.forwardProcess(data=batch_action_tensor, epsilon=epsilon_tensor, step=rand_t)
 
-            # # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
-            # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+                # diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([batch_state_tensor, forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
+                diffu_loss, _ = _trainDiffusionBeh(inputs=torch.concat([forward_action_tensor, encode_t_tensor], dim=1), y_true=epsilon_tensor)
 
-            # self.epsilon_optimizer.zero_grad()
-            # diffu_loss.backward(retain_graph=True)
-            # self.epsilon_optimizer.step()
-            # diffu_loss_accum += diffu_loss.tolist()
+                self.epsilon_optimizer.zero_grad()
+                diffu_loss.backward(retain_graph=True)
+                self.epsilon_optimizer.step()
+                diffu_loss_accum += diffu_loss.tolist()
 
             # Update target networks
             _updateTargetNetworks()

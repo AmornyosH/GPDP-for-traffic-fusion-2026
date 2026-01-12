@@ -16,11 +16,12 @@ CUDA = False
 import matplotlib.pyplot as plt
 
 # ======================================= Local Functions ========================================
-def getDataset(path:str):
-    if os.path.isfile(path):
+def getDataset(path:str, type:str):
+    _path = path+'_'+type
+    if os.path.isfile(_path+'.npz'):
         if args.task != 'dataset':
             # Load the dataset
-            dataset = np.load(path, allow_pickle=True)
+            dataset = np.load(_path+'.npz', allow_pickle=True)
             _dataset_creation_flag = False
         else:
             # Check if you want to override the previous dataset. 
@@ -44,14 +45,17 @@ def getDataset(path:str):
         # print('{:s} Please input the number of data points...'.format(main_tag))
         # _num_data = int(input(''))
         _num_data = int(input('{:s} Please input the number of data points... '.format(main_tag)))
+        
+        print(f'{main_tag} The dataset ({type}) is being created.')
+
         # Create a new dataset.
-        dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data)
+        dataset = dataset_creation.datasetCreation(env=env, num_data=_num_data, type=type)
 
         # Saving the dataset.
-        np.savez(path, **dataset)
+        np.savez(_path, **dataset)
         
         # Print Final status
-        print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{path}')
+        print(f'{main_tag}', 'The dataset is successfully created and saved to ', f'{_path}')
 
         # # Checking
         # # plt.scatter(dataset['actions'][:, 0], dataset['actions'][:, 1])  # Show action distributions.
@@ -75,6 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('--density', default=40, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
+    parser.add_argument('--dataset_type', default='expert')
     parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
     parser.add_argument('--render', action='store_true', help='render the simulation')
@@ -101,7 +106,7 @@ if __name__ == '__main__':
     # ========== Check whether the dataset/replay_buffers is exist ?
     # !!!!!!!!!! The dataset or replay buffers are required to intialise the RL agent. 
     # Get the dataset
-    dataset = getDataset(dataset_path)
+    dataset = getDataset(dataset_path, args.dataset_type)
 
     # ========== Training (Offline)
     if args.task == 'training':

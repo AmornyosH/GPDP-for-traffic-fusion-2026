@@ -19,7 +19,8 @@ class myExactGP(torch.nn.Module):
         self.params_dict = params_dict
         self.num_sample = dataset['num_sample']
 
-        self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
+        # self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
+        self.x_dim = 4
         self.y_dim = int(params_dict['action_dim'])
 
         # Initialise Paths
@@ -54,7 +55,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=5)
+            _slice_idx = np.arange(stop=self.num_sample, step=4)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
@@ -100,9 +101,9 @@ class myExactGP(torch.nn.Module):
         # self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
         self.x_train = torch.tensor(temp_states[_slice_idx], dtype=torch.float32)
         self.y_train = torch.tensor(temp_actions[_slice_idx], dtype=torch.float32)
-        # # Create hyperparameters
-        # self.sigma_n = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
-        # self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
+        # Create hyperparameters
+        self.sigma_n = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
+        self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
 
     def kernelPreparation(self):
         self.K_mm = self.rbfKernel(X_1=self.x_train, X_2=self.x_train, noise=True)

@@ -31,57 +31,25 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
 
         # We need to select the agent before reset the env. 
         if type == 'expert':
-            # agent = derived_agent
-            # We need to select the agent before reset the env. 
-            if len(observations_buffer) < (num_data // 2):
-                # Start with IDM
-                # agent = idm_agent
-                agent = derived_agent
-            else:
-                if len(observations_buffer) > (num_data // 1.5):
-                    agent = random_agent
-                else:
-                    agent = idm_agent
+            agent = derived_agent
                     
         elif type == 'human-expert':
             # We need to select the agent before reset the env. 
             if len(observations_buffer) < (num_data // 2):
-                # Start with IDM
-                # agent = idm_agent
                 agent = derived_agent
             else:
-                if len(observations_buffer) > (num_data // 1.5):
-                    agent = random_agent
-                else:
-                    agent = idm_agent
+                agent = idm_agent
 
         elif type == 'human-random':
             # We need to select the agent before reset the env. 
             if len(observations_buffer) < (num_data // 2):
                 # Start with IDM
                 agent = idm_agent
-                # agent = derived_agent
             else:
-                # if len(observations_buffer) > (num_data // 1.5):
-                #     agent = random_agent
-                # else:
-                #     agent = idm_agent
-                # agent = derived_agent
                 agent = random_agent
 
         elif type == 'human':
-            # We need to select the agent before reset the env. 
-            if len(observations_buffer) < (num_data // 2):
-                # Start with IDM
-                agent = idm_agent
-                # agent = derived_agent
-            else:
-                # if len(observations_buffer) > (num_data // 1.5):
-                #     agent = random_agent
-                # else:
-                #     agent = idm_agent
-                # agent = derived_agent
-                agent = random_agent
+            agent = idm_agent
 
         # Initialise env.
         _num_veh = env.num_veh_config[int(trajectory_count % len(env.num_veh_config))]  # define number of vehicles

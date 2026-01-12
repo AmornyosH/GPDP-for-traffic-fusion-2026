@@ -16,11 +16,11 @@ def getPaths(operating_system:str, alg:str, env_name:str):
         # Windows
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
             # This is my PC
-            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset.npz'.format(env_name)
+            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset'.format(env_name)
             training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
         elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
             # This is Xingyu's PC.
-            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset_1000000.npz'.format(env_name)
+            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset'.format(env_name)
             training_record_path = 'C:/Users/AmornyosH/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
     elif operating_system == 'darwin':
         # macOS
@@ -98,15 +98,16 @@ def allTrajExtraction(params_dict:dict, dataset:dict):
     # Reduce the resolution of the dataset
     _num_skip = 1
     _num_samples = 10000
+    _start_point = 30000
     # _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
     _new_indices = np.arange(_num_samples, step=_num_skip)
     _new_horizon = params_dict['horizon']//_num_skip
-    _state = dataset['observations'][0:_num_samples]
-    _action = dataset['actions'][0:_num_samples]
-    _reward = dataset['rewards'][0:_num_samples]
-    _next_state = dataset['next_observations'][0:_num_samples]
-    _truncrated = dataset['truncrated'][0:_num_samples]
-    _terminated = dataset['terminations'][0:_num_samples]
+    _state = dataset['observations'][_start_point-1:_start_point+_num_samples]
+    _action = dataset['actions'][_start_point-1:_start_point+_num_samples]
+    _reward = dataset['rewards'][_start_point-1:_start_point+_num_samples]
+    _next_state = dataset['next_observations'][_start_point-1:_start_point+_num_samples]
+    _truncrated = dataset['truncrated'][_start_point-1:_start_point+_num_samples]
+    _terminated = dataset['terminations'][_start_point-1:_start_point+_num_samples]
     # _num_samples = len(_state)
     _accum_reward = 0
     _best_reward = 0
