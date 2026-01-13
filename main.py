@@ -76,7 +76,7 @@ if __name__ == '__main__':
     # ========== Define arguments parser. 
     parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_ITS PyTorch Args')
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
-    parser.add_argument('--density', default=40, help='The density of the environment (number of vehicle), default:44')
+    parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--dataset_type', default='expert')
@@ -126,6 +126,7 @@ if __name__ == '__main__':
         if _training_option == 'online':
             _training_record = training.onlineTraining(path=training_record_path, 
                                                        env=env,
+                                                       num_veh=int(args.density),
                                                        alg=args.alg,
                                                        cont=False, 
                                                        dataset=dataset, 

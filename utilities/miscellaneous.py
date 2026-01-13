@@ -10,7 +10,7 @@ MISC_CAUTION_TAG = '(MISC) !!!!!>'
 def getPaths(operating_system:str, alg:str, env_name:str):
     if operating_system == 'linux':
         # Linux
-        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset.npz'.format(env_name)  
+        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset'.format(env_name)  
         training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(alg, env_name) 
     elif operating_system == 'win32':
         # Windows
@@ -102,12 +102,12 @@ def allTrajExtraction(params_dict:dict, dataset:dict):
     # _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
     _new_indices = np.arange(_num_samples, step=_num_skip)
     _new_horizon = params_dict['horizon']//_num_skip
-    _state = dataset['observations'][_start_point-1:_start_point+_num_samples]
-    _action = dataset['actions'][_start_point-1:_start_point+_num_samples]
-    _reward = dataset['rewards'][_start_point-1:_start_point+_num_samples]
-    _next_state = dataset['next_observations'][_start_point-1:_start_point+_num_samples]
-    _truncrated = dataset['truncrated'][_start_point-1:_start_point+_num_samples]
-    _terminated = dataset['terminations'][_start_point-1:_start_point+_num_samples]
+    _state = dataset['observations'][_start_point:_start_point+_num_samples]
+    _action = dataset['actions'][_start_point:_start_point+_num_samples]
+    _reward = dataset['rewards'][_start_point:_start_point+_num_samples]
+    _next_state = dataset['next_observations'][_start_point:_start_point+_num_samples]
+    _truncrated = dataset['truncrated'][_start_point:_start_point+_num_samples]
+    _terminated = dataset['terminations'][_start_point:_start_point+_num_samples]
     # _num_samples = len(_state)
     _accum_reward = 0
     _best_reward = 0

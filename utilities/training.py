@@ -19,7 +19,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
         from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
         agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, load=cont)
     else:
-        print(f'{CAUTION_TAG} Please provide validable name of the algorithms. Program is terminated!')
+        print(f'{CAUTION_TAG} Please provide validable algorithm name. Program is terminated!')
         exit()
 
     # Initialise parameters
@@ -52,7 +52,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
 
 
 # ========== Online Training
-def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):
+def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
@@ -71,7 +71,7 @@ def onlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total
         torch.manual_seed(seed)
 
         # Initialise env.
-        _ = env.reset(veh=agent, num_veh=40)
+        _ = env.reset(veh=agent, num_veh=num_veh)
         _truncrated = False
         _termination = False
         _accum_reward = 0

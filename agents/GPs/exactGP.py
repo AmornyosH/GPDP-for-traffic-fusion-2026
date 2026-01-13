@@ -19,8 +19,8 @@ class myExactGP(torch.nn.Module):
         self.params_dict = params_dict
         self.num_sample = dataset['num_sample']
 
-        # self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
-        self.x_dim = 4
+        self.x_dim = int(params_dict['observation_dim'])  # Observation dim = 10 in double ring.
+        # self.x_dim = 4
         self.y_dim = int(params_dict['action_dim'])
 
         # Initialise Paths
@@ -55,7 +55,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=4)
+            _slice_idx = np.arange(stop=self.num_sample, step=10)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
@@ -148,7 +148,7 @@ class myExactGP(torch.nn.Module):
     def myTraining(self, total_epoch:int, s_print:bool=False, online:bool=False):
         _batch_size = self.num_sample
         _gradient_step = int(len(self.x_train)//_batch_size)
-        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-02)
+        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-03)
         _training_record = 0
         _elbo_append = []
 
