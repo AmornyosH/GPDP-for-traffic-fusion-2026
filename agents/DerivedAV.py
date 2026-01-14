@@ -228,7 +228,7 @@ class DerivedAV:
         return decoded_actions
 
     # Action Performing Method
-    def actionPerform(self, state, s_print:bool=False, lane_id:int=None):
+    def actionPerform(self, state, s_print:bool=False, lane_id:int=None, pred:bool=True):
         # Get current speed of the AV...
         cur_speed = state[0]
         # cur_dist = state[3]

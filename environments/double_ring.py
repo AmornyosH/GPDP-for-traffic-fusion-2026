@@ -145,6 +145,8 @@ class DoubleRing:
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
+            _obs = veh.getObservation()
+            veh.actionPerform(state=_obs, s_print=False, pred=True)
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
@@ -168,6 +170,14 @@ class DoubleRing:
         for i in self.veh_id_list:
             _state.append(traci.vehicle.getSpeed(vehID=str(i)))
         return _state
+
+    def getSpeed(self, _num_veh):
+        _sum_speed = 0
+        # Generate Non-Controlled Vehicles in the simulation
+        for i in range(_num_veh-1):
+            _sum_speed += traci.vehicle.getSpeed(vehID=str(i))
+        
+        return _sum_speed
 
     # --------- Initialise imposter vehicle parameters (If noise_inj == True)
     def initImposter(self, av_lane):

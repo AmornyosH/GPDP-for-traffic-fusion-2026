@@ -227,7 +227,7 @@ class IDM:
         return decoded_actions
     
     # Action Performing Method
-    def actionPerform(self, state, s_print:bool=False, lane_id:int=None):
+    def actionPerform(self, state, s_print:bool=False, lane_id:int=None, pred:bool=True):
         # IDM agent does not need to perform any action. 
         # The SUMO will automatically do all the work. 
         # Here, we just extract those actions from SUMO and return to keep them in replay buffer. 

@@ -4,12 +4,17 @@ import torch
 from agents.IDM import IDM
 from agents.RandomAV import RandomAV
 from agents.AV import AutonomousVehicle
+from agents.DerivedAV import DerivedAV
 
 def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, imposter:bool=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
         agent = AutonomousVehicle(load=load, params_dict=env.params_dict, dataset=dataset, id='my_AV', online=False)
+    elif alg == 'derived':
+        agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
+    elif alg == 'IDM':
+        agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
 
     # Initialise MDP transitions and others
     observations_buffer = []
@@ -20,6 +25,9 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
     termination_buffer = []
     horizon = env.params_dict['horizon']
     trajectory_count = 0  # Trajectory counter
+
+    avg_av_speed = 0
+    avg_all_speed = 0
 
     # Initialise env.
     _ = env.reset(veh=agent, num_veh=num_veh, imposter=imposter)
