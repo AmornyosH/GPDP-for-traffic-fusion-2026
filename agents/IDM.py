@@ -182,17 +182,19 @@ class IDM:
                                                   old_max=self.max_accel)
         if self.action_dim > 1:
             if inputs[1] == 0:
-                encoded_actions[1] = np.random.normal(loc=0.5, scale=0.005)
-                if encoded_actions[1] > 0.55:
-                    encoded_actions[1] = 0.55
-                elif encoded_actions[1] < 0.45:
-                    encoded_actions[1] = 0.45
+                # encoded_actions[1] = np.random.normal(loc=0.5, scale=0.005)
+                # if encoded_actions[1] > 0.60:
+                #     encoded_actions[1] = 0.60
+                # elif encoded_actions[1] < 0.40:
+                #     encoded_actions[1] = 0.40
+                encoded_actions[1] = 1.00
             else:
-                encoded_actions[1] = np.random.normal(loc=-0.5, scale=0.005)
-                if encoded_actions[1] > -0.45:
-                    encoded_actions[1] = -0.45
-                elif encoded_actions[1] < -0.55:
-                    encoded_actions[1] = -0.55
+                # encoded_actions[1] = np.random.normal(loc=-0.5, scale=0.005)
+                # if encoded_actions[1] > -0.40:
+                #     encoded_actions[1] = -0.40
+                # elif encoded_actions[1] < -0.60:
+                #     encoded_actions[1] = -0.60
+                encoded_actions[1] = -1.00
         else:
             if inputs[1] == 0:
                 encoded_actions[0] = encoded_actions[0]

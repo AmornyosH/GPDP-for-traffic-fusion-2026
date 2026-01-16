@@ -73,7 +73,7 @@ class DoubleRing:
                     'num_veh': self.max_num_veh, 
                     }
 
-    def reset(self, veh:object, num_veh:int=None, imposter:bool=False):
+    def reset(self, veh:object, num_veh:int=None, imposter:bool=False, lane:int=None):
         '''
         Add the AV to the environment (SUMO) and perform run-in steps, which contain adding 
         all vehicles to the environment, and warming up, which allows the congestion to occur. 
@@ -92,8 +92,11 @@ class DoubleRing:
             print(f'{self.caution_tag}', 'The vehicles\'s state cannot be observed. Please provide vehicle id !')
             exit()
         # `````````` Generate Autonomous Vehicle in the simulation (Agent)
-        # _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
-        _depart_lane = 1
+        if lane is None:
+            _depart_lane = 0 if self.prev_depart_lane_index != 0 else 1
+        else:
+            _depart_lane = lane
+            # _depart_lane = 1
         self.prev_depart_lane_index = _depart_lane
         traci.vehicle.add(vehID=veh.veh_id, routeID=self.route_id, typeID=veh.veh_type, departLane=_depart_lane)
         self.veh_id_list.append(veh.veh_id)
@@ -184,8 +187,8 @@ class DoubleRing:
         traci.vehicle.setSpeed(vehID=self.impos_veh_id, speed=-1) if self.impos_veh_id is not None else ...
         _lane_id = traci.lane.getIDList()
         _av_lane = int(av_lane)
-        # _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
-        _impos_lane = np.random.choice(_lane_id)
+        _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
+        # _impos_lane = np.random.choice(_lane_id)
         _veh_in_lane = traci.lane.getLastStepVehicleIDs(laneID=_impos_lane)
         while _veh_in_lane == ():  # Check if there is any vehicle on the current lane of AV
             _impos_lane = np.random.choice(_lane_id)

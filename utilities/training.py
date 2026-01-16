@@ -44,8 +44,8 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               )
     
     # GP training.
-    # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-    agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
+    agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
+    # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
     if agent.ALG == 'SGDP':
         agent.gp_model.myTraining(total_epoch=2000, s_print=True)
     agent.recordSaving(path=agent.training_record_path)
@@ -123,15 +123,6 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
 
             _training_results = agent.controller.training(steps=1, online=True)
 
-            # print(f'{TAG} Epoch: {agent.controller.training_record},',
-            #     f' Gradient Step: {agent.controller.training_step_counter}',
-            #     ' P-Loss: ', round(_training_results['policy_loss'], 2),
-            #     ' Q1-Loss: ', round(_training_results['q1_loss'], 2),
-            #     ' Q2-Loss: ', round(_training_results['q2_loss'], 2) if _training_results.get('q2_loss') is not None else '',
-            #     ' GP-Loss: ', round(_training_results['gp_loss'], 2) if _training_results.get('gp_loss') is not None else '',
-            #     #   ' Time: ', round(time()-_start_time, 2)
-            #     )
-
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
                 # if (t % horizon*0.2) == 0:
@@ -148,21 +139,11 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
         # Close the SUMO connection. (To not show error message)
         env.close()
 
-        # # Storing transitions
-        # torch.vstack(agent.controller.state_buffer)
-        # torch.vstack(agent.controller.action_buffer)
-        # torch.vstack(agent.controller.reward_buffer)
-        # torch.vstack(agent.controller.next_state_buffer)
-        # # truncrated_buffer.append(_truncrated)
-        # # termination_buffer.append(_termination)
-
         # Print summary status.
         print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
                                                     ', Avg_raw_return: ', round(_accum_reward, PRECISION),
                                                     ', Num_vehicles: ', len(env.veh_id_list), 
                                                     ', Depart_lane: ', _observation[1])
-
-        # _training_results = agent.controller.training(steps=10000, online=True)
 
         # Train GP
         # For SGDP, the GPR model is trained seperately. 
@@ -180,11 +161,8 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
             #   ' Time: ', round(time()-_start_time, 2)
             )
 
-        # # Print summary status.
-        # print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
-        #                                             ', Avg_raw_return: ', round(_accum_reward, PRECISION),
-        #                                             ', Num_vehicles: ', len(env.veh_id_list), 
-        #                                             ', Depart_lane: ', _observation[1])
+        # Save the evaluation records
+
     
     return _accum_reward
     ...

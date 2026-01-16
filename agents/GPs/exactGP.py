@@ -55,7 +55,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=4)
+            _slice_idx = np.arange(stop=self.num_sample, step=10)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
@@ -122,7 +122,7 @@ class myExactGP(torch.nn.Module):
         X_2 = torch.tensor(X_2, dtype=torch.float32) if not torch.is_tensor(X_2) else X_2
         # print(X_1.size(), self.ell.size())
         kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1/self.ell, X_2/self.ell)**2)/2)
-        kernel = torch.abs(kernel)
+        # kernel = torch.abs(kernel)
         if noise:
             # Noisy observation
             kernel += ((self.sigma_n**2) * torch.eye(len(X_1)))
@@ -148,7 +148,7 @@ class myExactGP(torch.nn.Module):
     def myTraining(self, total_epoch:int, s_print:bool=False, online:bool=False):
         _batch_size = self.num_sample
         _gradient_step = int(len(self.x_train)//_batch_size)
-        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-03)
+        _cov_optimizer = torch.optim.Adam([self.sigma_n, self.ell], lr=1e-02 if not online else 1e-02)
         _training_record = 0
         _elbo_append = []
 

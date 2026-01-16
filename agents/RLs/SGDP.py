@@ -416,8 +416,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         # _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
 
         # Increase training record after epoch finished.
-        _training_record += 1
-        self.training_record += 1
+        _training_record += 1 if not online else ...
+        self.training_record += 1 if not online else ...
         
         # # Altered Observation
         # if self.training_record % 5 == 0:

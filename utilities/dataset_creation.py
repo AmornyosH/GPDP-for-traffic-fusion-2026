@@ -67,7 +67,7 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
         for t in range(horizon):
             # Agent take action
             _action = agent.actionPerform(state=_observation) 
-            _action[0] += (0.05 * np.random.random())
+            # _action[0] += (0.05 * np.random.random())
             
             # Take a step in the environment and observes termination. 
             _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
