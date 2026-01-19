@@ -12,6 +12,7 @@ def getPaths(operating_system:str, alg:str, env_name:str):
         # Linux
         dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset'.format(env_name)  
         training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(alg, env_name) 
+        evaluation_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_evaluation_results'.format(alg, env_name) 
     elif operating_system == 'win32':
         # Windows
         if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
@@ -27,7 +28,7 @@ def getPaths(operating_system:str, alg:str, env_name:str):
         dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(env_name)  
         training_record_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_{}_training_records'.format(alg, env_name)
 
-    return dataset_path, training_record_path   
+    return dataset_path, training_record_path, evaluation_path
 
 # Range Conversion Method
 def rangeConversion(input, new_min, new_max, old_min=-1, old_max=1) -> float:
@@ -97,8 +98,8 @@ def bestTrajExtraction(params_dict:dict, dataset:dict):
 def allTrajExtraction(params_dict:dict, dataset:dict):
     # Reduce the resolution of the dataset
     _num_skip = 1
-    _num_samples = 10000
-    _start_point = 30000
+    _num_samples = 50000
+    _start_point = 0
     # _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
     _new_indices = np.arange(_num_samples, step=_num_skip)
     _new_horizon = params_dict['horizon']//_num_skip
@@ -186,7 +187,7 @@ def IntTrajExtraction(interval:int, params_dict:dict, dataset:dict):
 
     return _best_dataset
 
-
+# 
 def klDivergence(input_1, input_2):
     '''
     KL-Divergence Computation Method \\

@@ -131,7 +131,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         # best_dataset = dataset
         
         # self.gp_model = mySVGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
-        self.gp_model = myExactGP(params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
+        self.gp_model = myExactGP(load=load, params_dict=params_dict, dataset=best_dataset, cuda=CUDA, parent_alg=self.ALG, online=online)
 
     # Training Record Loading Method
     def loadTrainingRecord(self):

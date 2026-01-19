@@ -161,8 +161,6 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
             #   ' Time: ', round(time()-_start_time, 2)
             )
 
-        # Save the evaluation records
 
-    
     return _accum_reward
     ...

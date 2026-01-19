@@ -174,10 +174,10 @@ class DoubleRing:
             _state.append(traci.vehicle.getSpeed(vehID=str(i)))
         return _state
 
-    def getSpeed(self, _num_veh):
+    def getSumSpeed(self, num_veh):
         _sum_speed = 0
         # Generate Non-Controlled Vehicles in the simulation
-        for i in range(_num_veh-1):
+        for i in range(num_veh-1):
             _sum_speed += traci.vehicle.getSpeed(vehID=str(i))
         
         return _sum_speed
