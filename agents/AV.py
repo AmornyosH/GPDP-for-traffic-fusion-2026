@@ -15,7 +15,7 @@ from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
 
 
 class AutonomousVehicle:
-    def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV', online:bool=False):
+    def __init__(self, load:bool, params_dict:dict, num_veh:int=44, dataset:dict=None, id='AV', online:bool=False):
         self.load = load
         self.veh_id = id
         self.veh_type = 'my_AV'
@@ -24,7 +24,7 @@ class AutonomousVehicle:
         self.sumo_time_step = params_dict['time_step']  # sumo time step
         self.env_name = params_dict['environment']
         self.num_lane = params_dict['num_lane']
-        self.num_veh = params_dict['num_veh']
+        self.num_veh = num_veh
         self.reward_config = params_dict['reward_config']
         self.reward_objective = params_dict['reward_objective']
         
@@ -126,12 +126,12 @@ class AutonomousVehicle:
             if float(candidate_neigh_leader[1]) >= -3.00:
                 self.neighbor_leader_veh = candidate_neigh_leader
             else:
-                neigh_leader = self.leader_veh = traci.vehicle.getLeader(vehID=candidate_neigh_leader[0], dist=self.detect_dist)
+                neigh_leader = traci.vehicle.getLeader(vehID=candidate_neigh_leader[0], dist=self.detect_dist)
                 self.neighbor_leader_veh = neigh_leader
 
             # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh[0] is not '' else ... # Assign colour to detected vehicles.
-            observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0]) if self.neighbor_leader_veh[0] is not None else self.max_speed
-            observation[7] = self.neighbor_leader_veh[1] if self.neighbor_leader_veh[1] is not None else self.detect_dist
+            observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0]) if self.neighbor_leader_veh is not None else self.max_speed
+            observation[7] = self.neighbor_leader_veh[1] if self.neighbor_leader_veh is not None else self.detect_dist
         else:
             # No -- There is not
             observation[6] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
@@ -147,8 +147,8 @@ class AutonomousVehicle:
                 self.neighbor_follower_veh = neigh_follower
 
             # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh[0] is not '' else ... # Assign colour to detected vehicles.
-            observation[8] = traci.vehicle.getSpeed(vehID=self.neighbor_follower_veh[0]) if self.neighbor_follower_veh[0] is not '' else self.min_speed
-            observation[9] = self.neighbor_follower_veh[1] if self.neighbor_follower_veh[1] is not '' else self.detect_dist 
+            observation[8] = traci.vehicle.getSpeed(vehID=self.neighbor_follower_veh[0]) if self.neighbor_follower_veh is not '' else self.min_speed
+            observation[9] = self.neighbor_follower_veh[1] if self.neighbor_follower_veh is not '' else self.detect_dist 
         else:
             # No -- There is not
             observation[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
@@ -283,7 +283,7 @@ class AutonomousVehicle:
         # traci.vehicle.setSpeed(vehID=self.veh_id, speed=_desired_speed)
 
         # Perform lateral action
-        if self.lateral_action:
+        if self.lateral_action and lane_id is None:
             traci.vehicle.changeLane(vehID=self.veh_id, laneIndex=action_lat, duration=duration)
 
         self.previous_action = action_sample

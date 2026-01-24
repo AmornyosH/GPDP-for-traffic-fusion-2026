@@ -11,11 +11,11 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
     if alg == 'SGDP':
-        agent = AutonomousVehicle(load=load, params_dict=env.params_dict, dataset=dataset, id='my_AV', online=False)
+        agent = AutonomousVehicle(load=load, params_dict=env.params_dict, dataset=dataset, id='my_AV', online=False, num_veh=num_veh)
     elif alg == 'derived':
-        agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
+        agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived', num_veh=num_veh)
     elif alg == 'IDM':
-        agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
+        agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived', num_veh=num_veh)
 
     # Initialise MDP transitions and others
     observations_buffer = []

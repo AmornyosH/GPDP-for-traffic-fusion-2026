@@ -12,16 +12,24 @@ from sumolib import checkBinary
 SUMO_TIMESTEP = 0.1
 
 class DoubleRing:
-    def __init__(self, render:bool=False, num_veh:int=44):
+    def __init__(self, render:bool=False, cond:str='standard'):
         # Initialise Environment's Parameters
         self.env_name = 'double_ring'
         self.env_tag = '(Double_Ring) ----->'
         self.caution_tag = '(Double_Ring) !!!!!>'
         self.render = render
-        self.max_num_veh = num_veh
-        self.num_veh_config = [40, 42, 44, 46, 48]
-        # self.num_veh_config = [33, 40, 44, 49, 58]
-        # self.num_veh_config = [44]
+
+        # Number of vehicle configurations
+        self.condition = cond
+        if cond == 'more_busy':
+            self.num_veh_config = [50, 54, 58]
+        elif cond == 'less_busy':
+            self.num_veh_config = [28, 32, 38]
+        elif cond == 'shifted':
+            self.num_veh_config = [44]
+        else:
+            self.num_veh_config = [40, 42, 44, 46, 48] 
+
         self.veh_id_list = []  # Vehicle's id list.
         self.circumference = 250.
         self.veh_gap_dist = 2.
@@ -44,6 +52,7 @@ class DoubleRing:
         print(f'{self.env_tag}', 'Route_id: ', self.route_id)
         print(f'{self.env_tag}', 'Veh_type: ', self.veh_type)
         print(f'{self.env_tag}', 'Lane_id: ', self.lane_id)
+        print(f'{self.env_tag}', 'Num_veh_config: ', self.num_veh_config)
 
         self.params_dict = self.paramsDict()
         self.prev_depart_lane_index = self.params_dict['default_depart_lane_index']
@@ -70,7 +79,6 @@ class DoubleRing:
                     'reward_objective': 'greedy',
                     'num_lane': 2, 
                     'default_depart_lane_index': 0,
-                    'num_veh': self.max_num_veh, 
                     }
 
     def reset(self, veh:object, num_veh:int=None, imposter:bool=False, lane:int=None):
@@ -138,6 +146,8 @@ class DoubleRing:
         _run_in_time = _step
         # ==================================== Run-in steps end ====================================
 
+        veh.target_speed = (250-_total_num_veh) / _total_num_veh
+
         # =================================== Warmup steps start ===================================
         # `````````` Warmup Steps
         # Warm up the traffic to get a steady state of heavy traffic before learning (Follow the paper.)
@@ -149,7 +159,7 @@ class DoubleRing:
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
             _obs = veh.getObservation()
-            veh.actionPerform(state=_obs, s_print=False, pred=True)
+            veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=lane)
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================

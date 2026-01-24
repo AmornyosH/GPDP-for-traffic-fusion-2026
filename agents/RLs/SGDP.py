@@ -57,10 +57,10 @@ class StochasticGaussianprocessDiffusionPolicy:
             print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
             import pathlib
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'
-            self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
-            self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
-            self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+            self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
         # Initialise Training Parameters
         self.norm_reward_training_append = []
@@ -408,6 +408,10 @@ class StochasticGaussianprocessDiffusionPolicy:
             _updateTargetNetworks()
             self.training_step_counter += 1
 
+            # Save checkpoints
+            if self.training_step_counter % 10000 == 0:
+                self.recordSaving(path=self.training_record_path+'_'+str(self.training_step_counter) if not online else self.online_training_record_path)
+
         # # Append loss for recording.
         # self.q_1_loss_append.append(q_1_loss_accum/_num_gradient_step)
         # # self.q_2_loss_append.append(q_2_loss_accum/_num_gradient_step)
@@ -416,8 +420,8 @@ class StochasticGaussianprocessDiffusionPolicy:
         # _gp_loss = self.gp_model.myTraining(total_epoch=10, ft=False)
 
         # Increase training record after epoch finished.
-        _training_record += 1 if not online else ...
-        self.training_record += 1 if not online else ...
+        _training_record += 1 
+        self.training_record += 1 
         
         # # Altered Observation
         # if self.training_record % 5 == 0:

@@ -34,27 +34,27 @@ class myExactGP(torch.nn.Module):
             print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
             import pathlib
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_training_record'
-            self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_online_training_record'
-            self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_gp_training_record_checkpoint'
-            self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+            self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_online_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
         self.cuda() if cuda else ...
 
-        # # Check for the training record file and the response from user...
-        # if os.path.isfile(self.training_record_path) is True:
-        #     print(f'{self.tag} There exists a training record for this agent. Do you wish to load the exist one ?')
-        #     _ans_1 = input(f'{self.tag} Press [y/n] and enter: ')
-        # else:
-        #     _ans_1 = 'n'
-
         # Check for the training record file and the response from user...
-        if load:
-            _ans_1 = 'y'
-            if not os.path.isfile(self.training_record_path) is True:
-                print(f'{self.tag} There is no exists a training record for this agent !!')
-        else: 
+        if os.path.isfile(self.training_record_path) is True:
+            print(f'{self.tag} There exists a training record for this agent. Do you wish to load the exist one ?')
+            _ans_1 = input(f'{self.tag} Press [y/n] and enter: ')
+        else:
             _ans_1 = 'n'
+
+        # # Check for the training record file and the response from user...
+        # if load:
+        #     _ans_1 = 'y'
+        #     if not os.path.isfile(self.training_record_path) is True:
+        #         print(f'{self.tag} There is no exists a training record for this agent !!')
+        # else: 
+        #     _ans_1 = 'n'
 
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':
@@ -64,7 +64,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=10)
+            _slice_idx = np.arange(stop=self.num_sample, step=5)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
