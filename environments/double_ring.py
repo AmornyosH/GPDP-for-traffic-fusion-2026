@@ -159,7 +159,7 @@ class DoubleRing:
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
             _obs = veh.getObservation()
-            veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=lane)
+            veh.actionPerform(state=_obs, s_print=False, pred=True)
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
@@ -213,7 +213,7 @@ class DoubleRing:
         return _impos_veh_id
 
     def setImposterSpeed(self, id):
-        impos_veh_speed = 1.5  # Slow the imposter vehicle down.
+        impos_veh_speed = 0.5  # Slow the imposter vehicle down.
         traci.vehicle.setSpeed(vehID=id, speed=impos_veh_speed)  
         # traci.vehicle.slowDown(vehID=id, speed=impos_veh_speed, duration=SUMO_TIMESTEP) 
 

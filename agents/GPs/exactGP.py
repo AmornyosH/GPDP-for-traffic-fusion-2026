@@ -64,7 +64,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=5)
+            _slice_idx = np.arange(stop=self.num_sample, step=10)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
@@ -94,7 +94,7 @@ class myExactGP(torch.nn.Module):
         self.sigma_p = torch.tensor(1.0, dtype=torch.float32)  # Fixed signal variance to 1.00^2
         self.K_mm = self.rbfKernel(X_1=self.x_train, X_2=self.x_train, noise=True)
         self.L_mm = torch.linalg.cholesky(self.K_mm, upper=False)
-
+        # print(self.y_train)
         self.num_sample = len(self.x_train)
         print(f'{self.tag} GP Initialised!')
         print(f'{self.tag} Algorithm: ', self.ALG)
@@ -145,11 +145,18 @@ class myExactGP(torch.nn.Module):
             _k_s = self.rbfKernel(X_1=self.x_train, X_2=x_test, noise=False)
             _k_ss = self.rbfKernel(X_1=x_test, X_2=x_test, noise=False)
 
+            # # Cholesky decomposition
+            # _L = torch.linalg.cholesky(self.K_mm, upper=False)
+            # _alpha = torch.linalg.solve_triangular(_L.T, torch.linalg.solve_triangular(_L, self.y_train, upper=False), upper=True)
+            # _mean = _k_s.T @ _alpha
+            # _v = torch.linalg.solve_triangular(_L, _k_s, upper=False)
+            # _var = _k_ss - (_v.T @ _v)
+
             # Cholesky decomposition
-            _L = torch.linalg.cholesky(self.K_mm, upper=False)
-            _alpha = torch.linalg.solve_triangular(_L.T, torch.linalg.solve_triangular(_L, self.y_train, upper=False), upper=True)
+            # _L = torch.linalg.cholesky(self.K_mm, upper=False)
+            _alpha = torch.linalg.solve_triangular(self.L_mm.T, torch.linalg.solve_triangular(self.L_mm, self.y_train, upper=False), upper=True)
             _mean = _k_s.T @ _alpha
-            _v = torch.linalg.solve_triangular(_L, _k_s, upper=False)
+            _v = torch.linalg.solve_triangular(self.L_mm, _k_s, upper=False)
             _var = _k_ss - (_v.T @ _v)
 
         return _mean, _var

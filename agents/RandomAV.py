@@ -13,7 +13,7 @@ import random
 from utilities import miscellaneous as misc
 
 class RandomAV:
-    def __init__(self, load:bool, params_dict:dict, dataset:dict=None, id='AV'):
+    def __init__(self, load:bool, params_dict:dict, num_veh:int=44, dataset:dict=None, id='AV'):
         self.load = load
         self.veh_id = id
         self.veh_type = 'my_AV'
@@ -22,7 +22,7 @@ class RandomAV:
         self.sumo_time_step = params_dict['time_step']  # sumo time step
         self.env_name = params_dict['environment']
         self.num_lane = params_dict['num_lane']
-        self.num_veh = params_dict['num_veh']
+        self.num_veh = num_veh
         self.reward_config = params_dict['reward_config']
         self.reward_objective = params_dict['reward_objective']
 
