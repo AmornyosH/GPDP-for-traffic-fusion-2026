@@ -57,124 +57,209 @@ class AutonomousVehicle:
         # Initialise High Level control algorithm 
         self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
 
-    # Observation Method
+    # # Observation Method
+    # def getObservation(self, noise=False):
+    #     # ----- State conditions (Follow Alex Bayen's paper):
+    #     observation = np.zeros([self.observation_dim], dtype=float)
+    #     observation[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
+    #     observation[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
+
+    #     # # Reset color for detected vehicles
+    #     # traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255]) if self.leader_veh is not None else ...
+    #     # traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255]) if self.follower_veh is not None else ...
+    #     # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255]) if self.neighbor_leader_veh is not None else ...
+    #     # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 255]) if self.neighbor_follower_veh is not None else ...
+
+    #     # Get Leader on AV's current lane
+    #     self.leader_veh = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
+    #     # Check if there is a vehicle in front ?
+    #     if self.leader_veh is not None:
+    #         # Yes -- There is
+    #         # traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
+    #         observation[2] = traci.vehicle.getSpeed(vehID=self.leader_veh[0])
+    #         observation[3] = self.leader_veh[1]
+    #     else:
+    #         # No -- There is not
+    #         self.leader_veh = None
+    #         observation[2] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
+    #         observation[3] = self.detect_dist  # Assign distance = maximum observable distance.
+
+    #     # -------------------------- If the state dimension has more than 3 (double ring and so on.)
+    #     # Get Follower info on AV's current lane
+    #     self.follower_veh = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
+    #     # Check if there is a vehicle behind ?
+    #     if self.follower_veh != '':
+    #         # Yes -- There is
+    #         # traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
+    #         observation[4] = traci.vehicle.getSpeed(vehID=self.follower_veh[0])
+    #         observation[5] = self.follower_veh[1]
+    #     else:
+    #         # No -- There is not
+    #         self.follower_veh = None
+    #         observation[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+    #         observation[5] = self.detect_dist  # Assign distance = maximum observable distance.
+
+    #     # Get Leader and follower of the other lane based on the current lane of AV.
+    #     if observation[1] == 0:  # AV is on the outer lane (get left neighbor)
+    #         # Get the leader and follower of the inner lane (left --> mode bit 1: 0)
+    #         leader_mode_set = 0b010
+    #         follower_mode_set = 0b000
+    #     else:
+    #         # AV is on the inner lane (get right neighbor)
+    #         # Get the leaser and follower of the outer lane (right --> mode bit 1: 1)
+    #         leader_mode_set = 0b011
+    #         follower_mode_set = 0b001
+    #     # Get the leader and follower info
+    #     candidate_neigh_leader = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
+    #     candidate_neigh_follower = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+
+    #     # if candidate_neigh_leader[1] >= 0.00:
+    #     #     self.neighbor_leader_veh = candidate_neigh_leader
+    #     # if candidate_neigh_follower[1] >= 0.00:
+    #     #     self.neighbor_follower_veh = candidate_neigh_follower
+    #     # self.neighbor_leader_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
+    #     # self.neighbor_follower_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+
+    #     # Check if there is a neighbor leader ?
+    #     if len(candidate_neigh_leader) != 0:
+    #         # Yes -- There is
+    #         if float(candidate_neigh_leader[1]) >= -3.00:
+    #             self.neighbor_leader_veh = candidate_neigh_leader
+    #         else:
+    #             neigh_leader = traci.vehicle.getLeader(vehID=candidate_neigh_leader[0], dist=self.detect_dist)
+    #             self.neighbor_leader_veh = neigh_leader
+
+    #         # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh[0] is not '' else ... # Assign colour to detected vehicles.
+    #         observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0]) if self.neighbor_leader_veh is not None else self.max_speed
+    #         observation[7] = self.neighbor_leader_veh[1] if self.neighbor_leader_veh is not None else self.detect_dist
+    #     else:
+    #         # No -- There is not
+    #         observation[6] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
+    #         observation[7] = self.detect_dist # Assign distance = maximum observable distance.
+
+    #     # Check if there is a neighbor follower ?
+    #     if len(candidate_neigh_follower) != 0:
+    #         # Yes -- There is
+    #         if float(candidate_neigh_follower[1]) >= -3.00:
+    #             self.neighbor_follower_veh = candidate_neigh_follower
+    #         else:
+    #             neigh_follower = traci.vehicle.getFollower(vehID=candidate_neigh_follower[0], dist=self.detect_dist)
+    #             self.neighbor_follower_veh = neigh_follower
+
+    #         # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh[0] is not '' else ... # Assign colour to detected vehicles.
+    #         observation[8] = traci.vehicle.getSpeed(vehID=self.neighbor_follower_veh[0]) if self.neighbor_follower_veh is not '' else self.min_speed
+    #         observation[9] = self.neighbor_follower_veh[1] if self.neighbor_follower_veh is not '' else self.detect_dist 
+    #     else:
+    #         # No -- There is not
+    #         observation[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+    #         observation[9] = self.detect_dist  # Assign distance = maximum observable distance.
+            
+    #     # # Assign colour to detected vehicles.
+    #     # if self.leader_veh != []:
+    #     #     traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
+    #     #     traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
+    #     # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh is not None else ...
+    #     # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh is not None else ...
+
+    #     # Inject noise to the observation (if noise=True)
+    #     if noise == True:
+    #         noise_factor = 5  # If == 0, no noise in the observation
+    #         for n in range(len(observation)):
+    #             if n == 0:
+    #                 # No noise in it's own speed
+    #                 ran_noise = 0
+    #             else:
+    #                 ran_noise = np.random.random() * noise_factor
+    #             observation[n] += ran_noise
+        
+    #     # print(f'{self.veh_tag} observations: {observation}')
+
+    #     return observation
+
+    # State Retrieving Method
     def getObservation(self, noise=False):
-        # ----- State conditions (Follow Alex Bayen's paper):
-        observation = np.zeros([self.observation_dim], dtype=float)
-        observation[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
-        observation[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
 
-        # # Reset color for detected vehicles
-        # traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 255]) if self.leader_veh is not None else ...
-        # traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 255]) if self.follower_veh is not None else ...
-        # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 255]) if self.neighbor_leader_veh is not None else ...
-        # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 255]) if self.neighbor_follower_veh is not None else ...
+        # Get simulation time
+        _time = traci.simulation.getTime()
 
+        # ---------------------- Double Ring State Space ----------------------
+        # ----- State condition 2 (Follow Alex Bayen's paper):
+        state = np.zeros([10], dtype=float)
+        state[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
+        state[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
         # Get Leader on AV's current lane
-        self.leader_veh = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
+        leader_info = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
         # Check if there is a vehicle in front ?
-        if self.leader_veh is not None:
+        if leader_info != None:
             # Yes -- There is
-            # traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
-            observation[2] = traci.vehicle.getSpeed(vehID=self.leader_veh[0])
-            observation[3] = self.leader_veh[1]
+            state[2] = traci.vehicle.getSpeed(vehID=leader_info[0])
+            state[3] = leader_info[1]
         else:
             # No -- There is not
-            self.leader_veh = None
-            observation[2] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
-            observation[3] = self.detect_dist  # Assign distance = maximum observable distance.
+            state[2] = self.max_speed   # Assign the maximum speed (Assume that the leader is faster than AV.)
+            state[3] = self.detect_dist  # Assign distance = maximum observeable distance.
 
-        # -------------------------- If the state dimension has more than 3 (double ring and so on.)
         # Get Follower info on AV's current lane
-        self.follower_veh = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
+        follower_info = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
         # Check if there is a vehicle behind ?
-        if self.follower_veh != '':
+        if follower_info[0] != '':
             # Yes -- There is
-            # traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0])  # Assign colour to detected vehicles.
-            observation[4] = traci.vehicle.getSpeed(vehID=self.follower_veh[0])
-            observation[5] = self.follower_veh[1]
+            state[4] = traci.vehicle.getSpeed(vehID=follower_info[0])
+            state[5] = follower_info[1]
         else:
             # No -- There is not
-            self.follower_veh = None
-            observation[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
-            observation[5] = self.detect_dist  # Assign distance = maximum observable distance.
+            state[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+            state[5] = self.detect_dist  # Assign distance = maximum observeable distance.
 
         # Get Leader and follower of the other lane based on the current lane of AV.
-        if observation[1] == 0:  # AV is on the outer lane (get left neighbor)
+        if state[1] == 0:  # AV is on the outer lane (get left neighbor)
             # Get the leader and follower of the inner lane (left --> mode bit 1: 0)
             leader_mode_set = 0b010
             follower_mode_set = 0b000
-        else:
-            # AV is on the inner lane (get right neighbor)
+        else:# AV is on the inner lane (get right neighbor)
             # Get the leaser and follower of the outer lane (right --> mode bit 1: 1)
             leader_mode_set = 0b011
             follower_mode_set = 0b001
         # Get the leader and follower info
-        candidate_neigh_leader = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
-        candidate_neigh_follower = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
-
-        # if candidate_neigh_leader[1] >= 0.00:
-        #     self.neighbor_leader_veh = candidate_neigh_leader
-        # if candidate_neigh_follower[1] >= 0.00:
-        #     self.neighbor_follower_veh = candidate_neigh_follower
-        # self.neighbor_leader_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
-        # self.neighbor_follower_veh = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
-
+        neighbor_follower_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+        neighbor_leader_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
         # Check if there is a neighbor leader ?
-        if len(candidate_neigh_leader) != 0:
+        if len(neighbor_leader_info) != 0:
             # Yes -- There is
-            if float(candidate_neigh_leader[1]) >= -3.00:
-                self.neighbor_leader_veh = candidate_neigh_leader
-            else:
-                neigh_leader = traci.vehicle.getLeader(vehID=candidate_neigh_leader[0], dist=self.detect_dist)
-                self.neighbor_leader_veh = neigh_leader
-
-            # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh[0] is not '' else ... # Assign colour to detected vehicles.
-            observation[6] = traci.vehicle.getSpeed(vehID=self.neighbor_leader_veh[0]) if self.neighbor_leader_veh is not None else self.max_speed
-            observation[7] = self.neighbor_leader_veh[1] if self.neighbor_leader_veh is not None else self.detect_dist
+            state[6] = traci.vehicle.getSpeed(vehID=neighbor_leader_info[0])
+            state[7] = neighbor_leader_info[1]
         else:
             # No -- There is not
-            observation[6] = self.max_speed  # Assign the maximum speed (Assume that the leader is faster than AV.)
-            observation[7] = self.detect_dist # Assign distance = maximum observable distance.
-
+            state[6] = self.max_speed   # Assign the maximum speed (Assume that the leader is faster than AV.)
+            state[7] = self.detect_dist  # Assign distance = maximum observeable distance.
         # Check if there is a neighbor follower ?
-        if len(candidate_neigh_follower) != 0:
+        if len(neighbor_follower_info) != 0:
             # Yes -- There is
-            if float(candidate_neigh_follower[1]) >= -3.00:
-                self.neighbor_follower_veh = candidate_neigh_follower
-            else:
-                neigh_follower = traci.vehicle.getFollower(vehID=candidate_neigh_follower[0], dist=self.detect_dist)
-                self.neighbor_follower_veh = neigh_follower
-
-            # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh[0] is not '' else ... # Assign colour to detected vehicles.
-            observation[8] = traci.vehicle.getSpeed(vehID=self.neighbor_follower_veh[0]) if self.neighbor_follower_veh is not '' else self.min_speed
-            observation[9] = self.neighbor_follower_veh[1] if self.neighbor_follower_veh is not '' else self.detect_dist 
+            state[8] = traci.vehicle.getSpeed(vehID=neighbor_follower_info[0])
+            state[9] = neighbor_follower_info[1]
         else:
             # No -- There is not
-            observation[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
-            observation[9] = self.detect_dist  # Assign distance = maximum observable distance.
-            
-        # # Assign colour to detected vehicles.
-        # if self.leader_veh != []:
-        #     traci.vehicle.setColor(typeID=self.leader_veh[0], color=[255, 255, 0]) if self.leader_veh is not None else ...
-        #     traci.vehicle.setColor(typeID=self.follower_veh[0], color=[255, 255, 0]) if self.follower_veh is not None else ...
-        # traci.vehicle.setColor(typeID=self.neighbor_leader_veh[0], color=[255, 255, 0]) if self.neighbor_leader_veh is not None else ...
-        # traci.vehicle.setColor(typeID=self.neighbor_follower_veh[0], color=[255, 255, 0]) if self.neighbor_follower_veh is not None else ...
+            state[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+            state[9] = self.detect_dist  # Assign distance = maximum observeable distance.
+
+        # # Prepare GP inputs
+        # gp_inputs = _prepareInput(excel=True)
+        # self.prev_time_step = _time
+        # self.prev_lead_dis = state[3] if self.env_config == 'double_ring' else state[2]
 
         # Inject noise to the observation (if noise=True)
         if noise == True:
             noise_factor = 5  # If == 0, no noise in the observation
-            for n in range(len(observation)):
+            for n in range(len(state)):
                 if n == 0:
                     # No noise in it's own speed
                     ran_noise = 0
                 else:
                     ran_noise = np.random.random() * noise_factor
-                observation[n] += ran_noise
-        
-        # print(f'{self.veh_tag} observations: {observation}')
+                state[n] += ran_noise
 
-        return observation
+        # Return state
+        return state
 
     # Action Encoding Method 
     def actionEncoding(self, *args):

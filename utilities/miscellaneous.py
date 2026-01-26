@@ -98,8 +98,8 @@ def bestTrajExtraction(params_dict:dict, dataset:dict):
 def allTrajExtraction(params_dict:dict, dataset:dict):
     # Reduce the resolution of the dataset
     _num_skip = 1
-    _num_samples = 10000
-    _start_point = 20000
+    _num_samples = 50000
+    _start_point = 0
     # _new_indices = np.arange(dataset['num_sample'], step=_num_skip)
     _new_indices = np.arange(_num_samples, step=_num_skip)
     _new_horizon = params_dict['horizon']//_num_skip

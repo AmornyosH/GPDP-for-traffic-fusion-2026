@@ -64,14 +64,15 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=10)
+            _slice_idx = np.arange(stop=self.num_sample, step=20)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)
 
             # Create hyperparameters
             self.sigma_n = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
-            self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
+            # self.ell = torch.nn.Parameter(torch.ones(size=[1, self.x_dim], dtype=torch.float32), requires_grad=True)
+            self.ell = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float32), requires_grad=True)
 
         elif _ans_1 == 'y' or _ans_1=='Y' or _ans_1=='Yes' or _ans_1=='YES':
             print(f'{self.tag} Load training record.')
@@ -130,7 +131,8 @@ class myExactGP(torch.nn.Module):
         X_1 = torch.tensor(X_1, dtype=torch.float32) if not torch.is_tensor(X_1) else X_1
         X_2 = torch.tensor(X_2, dtype=torch.float32) if not torch.is_tensor(X_2) else X_2
         # print(X_1.size(), self.ell.size())
-        kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1/self.ell, X_2/self.ell)**2)/2)
+        # kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1/self.ell, X_2/self.ell)**2)/2)
+        kernel = (self.sigma_p**2) * torch.exp(-(torch.cdist(X_1, X_2)**2)/(2*self.ell))
         # kernel = torch.abs(kernel)
         if noise:
             # Noisy observation

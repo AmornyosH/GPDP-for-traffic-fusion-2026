@@ -76,6 +76,22 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
             # Uncertainty triggering
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
+
+                # Check if the neighbor follower is slowing down ?
+                _nf_speed = _observation[8]
+                _nf_id = agent.neighbor_follower_veh[0]
+                _nl_speed = _observation[6]
+                # _nl_id = agent.neighbor_leader_veh[0]
+                if _observation[1] == 1:
+                    # Check nf acceleration
+                    _nf_accel = env.getAccel(veh_id=_nf_id)
+                    if _nf_accel < 0 and _nl_speed > _nf_speed * 10:
+                        env.setKindVehSpeed(id=_nf_id)
+                    else:
+                        env.setKindVehSpeed(id=_nf_id, speed=-1)
+                else:
+                    env.resetVehSpeed(num_veh=num_veh)
+
                 # if t % (horizon*0.2) == 0:
                 #     _impos_veh_id = env.initImposter(av_lane=_observation[1])
                 #     print("changed!")

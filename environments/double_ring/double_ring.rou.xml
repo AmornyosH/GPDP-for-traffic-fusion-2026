@@ -51,8 +51,8 @@
     laneChangeModel='LC2013'
     lcStrategic="1.0"
     lcCooperative="1.0"
-    lcPushy="1.0"
-    lcImpatience="1.0"
+    lcPushy="0.1" 
+    lcImpatience="0.5"
     lcKeepRight="1.0"
 
     lcSpeedGain="1.0"
