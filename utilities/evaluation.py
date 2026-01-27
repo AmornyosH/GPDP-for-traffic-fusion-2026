@@ -41,7 +41,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
 
         # Initialise env.
         # _ = env.reset(veh=agent, num_veh=num_veh, imposter=imposter)
-        _ = env.reset(veh=agent, num_veh=num_veh, imposter=imposter, lane=1)
+        _ = env.reset(veh=agent, num_veh=num_veh, imposter=imposter, lane=0)
         _truncrated = False
         _termination = False
         _accum_reward = 0
@@ -82,7 +82,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
                 _nf_id = agent.neighbor_follower_veh[0]
                 _nl_speed = _observation[6]
                 # _nl_id = agent.neighbor_leader_veh[0]
-                if _observation[1] == 1:
+                if _observation[1] == 0:
                     # Check nf acceleration
                     _nf_accel = env.getAccel(veh_id=_nf_id)
                     if _nf_accel < 0 and _nl_speed > _nf_speed * 10:

@@ -181,37 +181,37 @@ if __name__ == '__main__':
 
         _veh_density = [(i * 1000 / 500) for i in env.num_veh_config]
 
-        # _idm_results_path = '/home/amornyos/PhD/Packages/resources/datasets/IDM_double_ring_evaluation_results'
-        # _idm_results_path += '_' + args.dataset_type
-        # # _idm_results_path += '_shifted' if UNCERTAINTY else '_standard'
-        # _idm_results_path += '_' + args.eval_mode
-        # idm_results = np.load(_idm_results_path+'.npz', allow_pickle=True)
-        # idm_results = idm_results['arr_0'].item()
+        _idm_results_path = '/home/amornyos/PhD/Packages/resources/datasets/IDM_double_ring_evaluation_results'
+        _idm_results_path += '_' + args.dataset_type
+        # _idm_results_path += '_shifted' if UNCERTAINTY else '_standard'
+        _idm_results_path += '_' + args.eval_mode
+        idm_results = np.load(_idm_results_path+'.npz', allow_pickle=True)
+        idm_results = idm_results['arr_0'].item()
         # idm_av_speed_mean = idm_results['avg_av_speed']
         # idm_av_speed_std = idm_results['std_av_speed']
-        # # idm_av_speed_mean = idm_results['avg_all_speed'] * 3600 / 1000
-        # # idm_av_speed_std = idm_results['std_all_speed'] * 3600 / 1000
-        # plt.scatter(_veh_density, idm_av_speed_mean, color='red')
-        # plt.plot(_veh_density, idm_av_speed_mean, color='red', label='IDM')
-        # plt.fill_between(_veh_density, 
-        #                  np.squeeze(idm_av_speed_mean+idm_av_speed_std), 
-        #                  np.squeeze(idm_av_speed_mean-idm_av_speed_std), color='red', alpha=0.10)
+        idm_av_speed_mean = idm_results['avg_all_speed'] * 3600 / 1000
+        idm_av_speed_std = idm_results['std_all_speed'] * 3600 / 1000
+        plt.scatter(_veh_density, idm_av_speed_mean, color='red')
+        plt.plot(_veh_density, idm_av_speed_mean, color='red', label='IDM')
+        plt.fill_between(_veh_density, 
+                         np.squeeze(idm_av_speed_mean+idm_av_speed_std), 
+                         np.squeeze(idm_av_speed_mean-idm_av_speed_std), color='red', alpha=0.10)
 
-        # _derived_results_path = '/home/amornyos/PhD/Packages/resources/datasets/derived_double_ring_evaluation_results'
-        # _derived_results_path += '_' + args.dataset_type
-        # # _derived_results_path += '_shifted' if UNCERTAINTY else '_standard'
-        # _derived_results_path += '_' + args.eval_mode
-        # derived_results = np.load(_derived_results_path+'.npz', allow_pickle=True)
-        # derived_results = derived_results['arr_0'].item()
+        _derived_results_path = '/home/amornyos/PhD/Packages/resources/datasets/derived_double_ring_evaluation_results'
+        _derived_results_path += '_' + args.dataset_type
+        # _derived_results_path += '_shifted' if UNCERTAINTY else '_standard'
+        _derived_results_path += '_' + args.eval_mode
+        derived_results = np.load(_derived_results_path+'.npz', allow_pickle=True)
+        derived_results = derived_results['arr_0'].item()
         # derived_av_speed_mean = derived_results['avg_av_speed']
         # derived_av_speed_std = derived_results['std_av_speed']
-        # # derived_av_speed_mean = derived_results['avg_all_speed'] * 3600 / 1000
-        # # derived_av_speed_std = derived_results['std_all_speed'] * 3600 / 1000
-        # plt.scatter(_veh_density , derived_av_speed_mean, color='orange')
-        # plt.plot(_veh_density , derived_av_speed_mean, color='orange', label='Derived')
-        # plt.fill_between(_veh_density , 
-        #                  np.squeeze(derived_av_speed_mean+derived_av_speed_std), 
-        #                  np.squeeze(derived_av_speed_mean-derived_av_speed_std), color='orange', alpha=0.25)
+        derived_av_speed_mean = derived_results['avg_all_speed'] * 3600 / 1000
+        derived_av_speed_std = derived_results['std_all_speed'] * 3600 / 1000
+        plt.scatter(_veh_density , derived_av_speed_mean, color='orange')
+        plt.plot(_veh_density , derived_av_speed_mean, color='orange', label='Derived')
+        plt.fill_between(_veh_density , 
+                         np.squeeze(derived_av_speed_mean+derived_av_speed_std), 
+                         np.squeeze(derived_av_speed_mean-derived_av_speed_std), color='orange', alpha=0.25)
 
         _loaded_path = evaluation_path
         _loaded_path += '_' + args.dataset_type
@@ -219,10 +219,10 @@ if __name__ == '__main__':
         _loaded_path += '_' + args.eval_mode
         gpdp_results = np.load(_loaded_path+'.npz', allow_pickle=True)
         gpdp_results = gpdp_results['arr_0'].item()
-        gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_av_speed'])
-        gpdp_av_speed_std = np.squeeze(gpdp_results['std_av_speed'])
-        # gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_all_speed']) * 3600 / 1000
-        # gpdp_av_speed_std = np.squeeze(gpdp_results['std_all_speed']) * 3600 / 1000
+        # gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_av_speed'])
+        # gpdp_av_speed_std = np.squeeze(gpdp_results['std_av_speed'])
+        gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_all_speed']) * 3600 / 1000
+        gpdp_av_speed_std = np.squeeze(gpdp_results['std_all_speed']) * 3600 / 1000
         plt.scatter(_veh_density, gpdp_av_speed_mean, color='blue')
         plt.plot(_veh_density, gpdp_av_speed_mean, color='blue', label='GPDP(Ours)')
         plt.fill_between(_veh_density, 

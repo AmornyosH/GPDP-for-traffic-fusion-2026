@@ -57,24 +57,24 @@ class StochasticGaussianprocessDiffusionPolicy:
             print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
             import pathlib
 
-            # DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            # self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record'
-            # self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
-            # self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
-            # self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
-
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'
-            self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
-            self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
-            self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+            self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+
+            # DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
+            # self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            # self.online_training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
+            # self.training_checkpoint_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
+            # self.evaluation_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
         # Initialise Training Parameters
         self.norm_reward_training_append = []
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=50)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=25, dec_step=25)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -308,7 +308,7 @@ class StochasticGaussianprocessDiffusionPolicy:
 
         # V network Training Method (local)
         def _trainVNetwork(inputs, y_true):
-            _TAU = 0.90
+            _TAU = 0.70
             # Compute gradients
             y_pred_tensor = self.q_2(inputs)
             _td = y_true - y_pred_tensor

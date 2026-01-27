@@ -159,7 +159,7 @@ class DoubleRing:
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
             _obs = veh.getObservation()
-            veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=1)
+            veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=0)
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================

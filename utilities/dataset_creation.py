@@ -21,6 +21,7 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
     termination_buffer = []
     trajectory_count = 0  # Trajectory counter
     # current_agent = 'IDM' # Default current agent is IDM.
+    lane = None
 
     # Start
     while len(observations_buffer) < num_data:
@@ -37,8 +38,10 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
             # We need to select the agent before reset the env. 
             if len(observations_buffer) < (num_data // 2):
                 agent = derived_agent
+                lane = 0
             else:
                 agent = idm_agent
+                lane = 1
 
         elif type == 'human-random':
             # We need to select the agent before reset the env. 
@@ -51,11 +54,18 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
         elif type == 'human':
             agent = idm_agent
 
+    # while len(observations_buffer) < num_data:
+        # # ========== Set global seed generator first. 
+        # seed = 2203 + (trajectory_count * 200)
+        # random.seed(seed)
+        # np.random.seed(seed=seed)
+        # torch.manual_seed(seed)
+
         # Initialise env.
         _num_veh = env.num_veh_config[int(trajectory_count % len(env.num_veh_config))]  # define number of vehicles
         agent.target_speed = (env.circumference - (env.veh_gap_dist*_num_veh/2)) / _num_veh
         # print(agent.target_speed)
-        _ = env.reset(veh=agent, num_veh=_num_veh)
+        _ = env.reset(veh=agent, num_veh=_num_veh, lane=lane)
         _truncrated = False
         _termination = False
         _accum_reward = 0

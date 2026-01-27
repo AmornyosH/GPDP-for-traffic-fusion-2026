@@ -243,6 +243,7 @@ class DerivedAV:
             action_long = 0.75 * self.max_accel
         else:
             action_long = 0.75 * self.min_accel
+        action_long += (0.05 * np.random.random())
         action_lat = traci.vehicle.getLaneIndex(vehID=self.veh_id) if lane_id is None else lane_id
         action_sample = self.actionEncoding(action_long, action_lat)
         # Print the select actions
@@ -292,6 +293,30 @@ class DerivedAV:
             # We can only observe the overall speed from our observation.
             # Which contains only 5 vehicles, including self speed.
             _reward = (_next_state[0]+_next_state[2]+_next_state[4]+_next_state[6]+_next_state[8])/5
+
+        # # Append Reward
+        # num_convolute = 5
+        # self.reward_append.append(_reward)
+        # # Append Accumalated Reward
+        # self.accum_reward = (0.99*self.accum_reward) + _reward
+        # # self.accum_reward_append = np.append(self.accum_reward_append, self.accum_reward)
+        # self.accum_reward_append.append(self.accum_reward)
+
+        # # Compute running mean/std
+        # if len(self.reward_append) <= num_convolute:
+        #     mean_t = np.mean(self.reward_append[0:len(self.reward_append)])
+        #     std_t = np.std(self.accum_reward_append[0:len(self.reward_append)])
+        #     # std_t = np.std(self.reward_append[0:len(self.reward_append)])
+        #     # std_t = np.clip(np.std(self.accum_reward_append[0:len(self.reward_append)]), 1e-03, np.inf)
+        # else:
+        #     m = len(self.reward_append)-num_convolute
+        #     mean_t = np.mean(self.reward_append[0+m:num_convolute+m])
+        #     std_t = np.std(self.accum_reward_append[0+m:num_convolute+m])
+        #     # std_t = np.std(self.reward_append[0+m:num_convolute+m])
+        #     # std_t = np.clip(np.std(self.accum_reward_append[0+m:num_convolute+m]), 1e-03, np.inf)
+
+        # _reward = (_reward - mean_t) / (std_t + 1e-08)
+        # # _reward = (_reward) / (std_t + 1e-08)
 
         # If the reward needs to be scaled... (Default = True)
         if scaled:
