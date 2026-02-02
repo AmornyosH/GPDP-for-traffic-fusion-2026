@@ -33,7 +33,10 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
         # We need to select the agent before reset the env. 
         if type == 'expert':
             agent = derived_agent
-                    
+            if len(observations_buffer) < (num_data // 2):
+                lane = 0
+            else:
+                lane = 1
         elif type == 'human-expert':
             # We need to select the agent before reset the env. 
             if len(observations_buffer) < (num_data // 2):
@@ -76,7 +79,7 @@ def datasetCreation(env:object, num_data:int, type:str='expert'):
         # Loop
         for t in range(horizon):
             # Agent take action
-            _action = agent.actionPerform(state=_observation) 
+            _action = agent.actionPerform(state=_observation, lane_id=lane) 
             # _action[0] += (0.05 * np.random.random())
             
             # Take a step in the environment and observes termination. 

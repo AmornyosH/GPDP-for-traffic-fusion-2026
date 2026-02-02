@@ -150,7 +150,7 @@ if __name__ == '__main__':
                                                        dataset=dataset,
                                                        load=args.load, 
                                                        imposter=UNCERTAINTY, 
-                                                       eval_time=3 if args.alg != 'derived' else 1)
+                                                       eval_time=10 if args.alg != 'derived' else 1)
             _total_return.append(_eval_results['mean_accum_reward'])
             _total_avg_av_speed.append(_eval_results['mean_av_speed'])
             _total_avg_all_speed.append(_eval_results['mean_all_speed'])
@@ -219,15 +219,22 @@ if __name__ == '__main__':
         _loaded_path += '_' + args.eval_mode
         gpdp_results = np.load(_loaded_path+'.npz', allow_pickle=True)
         gpdp_results = gpdp_results['arr_0'].item()
-        # gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_av_speed'])
-        # gpdp_av_speed_std = np.squeeze(gpdp_results['std_av_speed'])
-        gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_all_speed']) * 3600 / 1000
-        gpdp_av_speed_std = np.squeeze(gpdp_results['std_all_speed']) * 3600 / 1000
+        gpdp_av_speed_mean = np.squeeze(gpdp_results['avg_av_speed']) * 3600 / 1000
+        gpdp_av_speed_std = np.squeeze(gpdp_results['std_av_speed']) * 3600 / 1000
+        gpdp_all_speed_mean = np.squeeze(gpdp_results['avg_all_speed']) * 3600 / 1000
+        gpdp_all_speed_std = np.squeeze(gpdp_results['std_all_speed']) * 3600 / 1000
+        # Plot av speed
         plt.scatter(_veh_density, gpdp_av_speed_mean, color='blue')
-        plt.plot(_veh_density, gpdp_av_speed_mean, color='blue', label='GPDP(Ours)')
+        plt.plot(_veh_density, gpdp_av_speed_mean, color='blue', linestyle='--', label='All-GPDP(Ours)')
         plt.fill_between(_veh_density, 
                          gpdp_av_speed_mean+gpdp_av_speed_std, 
-                         gpdp_av_speed_mean-gpdp_av_speed_std, color='blue', alpha=0.10)
+                         gpdp_av_speed_mean-gpdp_av_speed_std, color='blue', hatch='/', alpha=0.10)
+        # Plot all speed
+        plt.scatter(_veh_density, gpdp_all_speed_mean, color='blue')
+        plt.plot(_veh_density, gpdp_all_speed_mean, color='blue', label='All-GPDP(Ours)')
+        plt.fill_between(_veh_density, 
+                         gpdp_all_speed_mean+gpdp_all_speed_std, 
+                         gpdp_all_speed_mean-gpdp_all_speed_std, color='blue', alpha=0.10)
 
 
 

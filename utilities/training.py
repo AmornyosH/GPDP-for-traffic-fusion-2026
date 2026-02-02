@@ -47,7 +47,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
     # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
     if agent.ALG == 'SGDP':
-        agent.gp_model.myTraining(total_epoch=300, s_print=True)
+        agent.gp_model.myTraining(total_epoch=1000, s_print=True)
     agent.recordSaving(path=agent.training_record_path)
 
 
@@ -123,11 +123,34 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
 
             _training_results = agent.controller.training(steps=1, online=True)
 
+            # Uncertainty triggering
             if t >= horizon*0.2 and imposter:
                 env.setImposterSpeed(id=_impos_veh_id)
-                # if (t % horizon*0.2) == 0:
-                #     _impos_veh_id = env.initImposter(av_lane=_observation[1])
-                #     print('changed!')
+
+                # Check if the neighbor follower is slowing down ?
+                _nf_speed = _observation[8]
+                _nf_id = agent.neighbor_follower_veh[0]
+                _nl_speed = _observation[6]
+                _f_id = agent.follower_veh[0]
+                # _nl_id = agent.neighbor_leader_veh[0]
+                if _observation[1] == 0:
+                    # Check nf acceleration
+                    _nf_accel = env.getAccel(veh_id=_nf_id)
+                    if _nf_accel < 0 and _nl_speed > _nf_speed * 10:
+                        env.setKindVehSpeed(id=_nf_id)
+                    else:
+                        env.setKindVehSpeed(id=_nf_id, speed=-1)
+                    
+                    # Reset all speed after the AV travel pass the imposter.
+                    if _f_id == _impos_veh_id:
+                        env.resetVehSpeed(num_veh=num_veh)
+                else:
+                    # env.resetVehSpeed(num_veh=num_veh)
+                    env.setKindVehSpeed(id=_f_id, speed=-1)
+
+                if t % (horizon*0.5) == 0:
+                    _impos_veh_id = env.initImposter(av_lane=_observation[1])
+                    print("changed!")
 
             # Assign new state
             _observation = _next_observation

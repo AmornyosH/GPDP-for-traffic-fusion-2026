@@ -27,6 +27,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
     horizon = env.params_dict['horizon']
     trajectory_count = 0  # Trajectory counter
 
+    action_sample_append = []
     avg_av_speed_append = []
     avg_all_speed_append = []
     accum_reward_append = []
@@ -70,6 +71,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
                 _termination = True # Set termination true just for now.
 
             # Get speed info of vehs...
+            action_sample_append.append(_action)
             avg_av_speed_append.append(_next_observation[0])
             avg_all_speed_append.append(env.getSumSpeed(num_veh=num_veh)/num_veh)
 
@@ -81,20 +83,26 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
                 _nf_speed = _observation[8]
                 _nf_id = agent.neighbor_follower_veh[0]
                 _nl_speed = _observation[6]
+                _f_id = agent.follower_veh[0]
                 # _nl_id = agent.neighbor_leader_veh[0]
                 if _observation[1] == 0:
                     # Check nf acceleration
                     _nf_accel = env.getAccel(veh_id=_nf_id)
-                    if _nf_accel < 0 and _nl_speed > _nf_speed * 10:
+                    if _nf_accel < 0 and _nl_speed > _nf_speed * 5:
                         env.setKindVehSpeed(id=_nf_id)
                     else:
                         env.setKindVehSpeed(id=_nf_id, speed=-1)
+                    
+                    # Reset all speed after the AV travel pass the imposter.
+                    if _f_id == _impos_veh_id:
+                        env.resetVehSpeed(num_veh=num_veh)
                 else:
-                    env.resetVehSpeed(num_veh=num_veh)
+                    # env.resetVehSpeed(num_veh=num_veh)
+                    env.setKindVehSpeed(id=_f_id, speed=-1)
 
-                # if t % (horizon*0.2) == 0:
-                #     _impos_veh_id = env.initImposter(av_lane=_observation[1])
-                #     print("changed!")
+                if t % (horizon*0.5) == 0:
+                    _impos_veh_id = env.initImposter(av_lane=_observation[1])
+                    print("changed!")
 
             # Assign new state
             _observation = _next_observation
@@ -119,6 +127,7 @@ def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, i
                     'mean_av_speed': np.mean(np.vstack(avg_av_speed_append)), 
                     'std_av_speed': np.std(np.vstack(avg_av_speed_append)), 
                     'mean_all_speed': np.mean(np.vstack(avg_all_speed_append)), 
-                    'std_all_speed': np.std(np.vstack(avg_all_speed_append))}
+                    'std_all_speed': np.std(np.vstack(avg_all_speed_append)), 
+                    'action': np.vstack(action_sample_append).reshape(-1, 2)}
     
     return eval_results

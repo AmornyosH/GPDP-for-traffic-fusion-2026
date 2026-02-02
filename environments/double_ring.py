@@ -27,8 +27,10 @@ class DoubleRing:
             self.num_veh_config = [28, 32, 38]
         elif cond == 'shifted':
             self.num_veh_config = [44]
+            # self.num_veh_config = [40, 42, 44, 46, 48] 
         else:
             self.num_veh_config = [40, 42, 44, 46, 48] 
+            # self.num_veh_config = [44]
 
         self.veh_id_list = []  # Vehicle's id list.
         self.circumference = 250.
@@ -199,9 +201,10 @@ class DoubleRing:
     def initImposter(self, av_lane):
         traci.vehicle.setSpeed(vehID=self.impos_veh_id, speed=-1) if self.impos_veh_id is not None else ...
         _lane_id = traci.lane.getIDList()
-        _av_lane = int(av_lane)
-        _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
+        # _av_lane = int(av_lane)
+        # _impos_lane = _lane_id[_av_lane]  # Gather current lane of AV. (0=outer, 1=inner)
         # _impos_lane = np.random.choice(_lane_id)
+        _impos_lane = _lane_id[0]
         _veh_in_lane = traci.lane.getLastStepVehicleIDs(laneID=_impos_lane)
         while _veh_in_lane == ():  # Check if there is any vehicle on the current lane of AV
             _impos_lane = np.random.choice(_lane_id)
