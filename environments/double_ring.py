@@ -26,8 +26,8 @@ class DoubleRing:
         elif cond == 'less_busy':
             self.num_veh_config = [28, 32, 38]
         elif cond == 'shifted':
-            self.num_veh_config = [44]
-            # self.num_veh_config = [40, 42, 44, 46, 48] 
+            # self.num_veh_config = [44]
+            self.num_veh_config = [40, 42, 44, 46, 48] 
         else:
             self.num_veh_config = [40, 42, 44, 46, 48] 
             # self.num_veh_config = [44]

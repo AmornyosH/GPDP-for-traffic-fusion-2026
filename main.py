@@ -150,7 +150,7 @@ if __name__ == '__main__':
                                                        dataset=dataset,
                                                        load=args.load, 
                                                        imposter=UNCERTAINTY, 
-                                                       eval_time=10 if args.alg != 'derived' else 1)
+                                                       eval_time=1 if args.alg == 'derived' or args.alg == 'IDM' else 10)
             _total_return.append(_eval_results['mean_accum_reward'])
             _total_avg_av_speed.append(_eval_results['mean_av_speed'])
             _total_avg_all_speed.append(_eval_results['mean_all_speed'])
@@ -176,6 +176,41 @@ if __name__ == '__main__':
                 'std_av_speed': np.vstack(_total_std_av_speed), 
                 'std_all_speed': np.vstack(_total_std_all_speed)})
 
+    if args.task == 'actions_collection':
+        _total_return = []
+        _total_avg_av_speed = []
+        _total_avg_all_speed = []
+        _total_std_av_speed = []
+        _total_std_all_speed = []
+
+        _eval_results = evaluation.sumoInteraction(env=env,
+                                                    num_veh=44,
+                                                    alg=args.alg,
+                                                    dataset=dataset,
+                                                    load=args.load, 
+                                                    imposter=UNCERTAINTY, 
+                                                    eval_time=1)
+        # _total_return.append(_eval_results['mean_accum_reward'])
+        # _total_avg_av_speed.append(_eval_results['mean_av_speed'])
+        # _total_avg_all_speed.append(_eval_results['mean_all_speed'])
+        # _total_std_av_speed.append(_eval_results['std_av_speed'])
+        # _total_std_all_speed.append(_eval_results['std_all_speed'])
+        
+        print(f'{main_tag}', 'Evaluation for', f'{args.alg}', ' with ', 44, ' is completed.')
+        print(f'{main_tag}', 'The return is ', _eval_results['mean_accum_reward'], '.')
+        print(f'{main_tag}', 'The average AV speed is ', _eval_results['mean_av_speed'], ', std: ', _eval_results['std_av_speed'], '.')
+        print(f'{main_tag}', 'The average All Vehicle speed is ', _eval_results['mean_all_speed'], ', std: ', _eval_results['std_all_speed'], '.')
+        print(f'{main_tag}', 'Exit Gracefully. Goodbye.')
+
+        # Save the evaluation records
+        _saved_path = evaluation_path
+        _saved_path += '_' + args.dataset_type
+        # _saved_path += ''_shifted' if UNCERTAINTY else '_standard''
+        _saved_path += '_' + args.eval_mode
+        _saved_path += '_' + args.task
+
+        np.save(_saved_path, _eval_results['action'])
+
     # ========== Results Plotting (Visualisation)
     if args.task == 'plot':
 
@@ -187,15 +222,10 @@ if __name__ == '__main__':
         _idm_results_path += '_' + args.eval_mode
         idm_results = np.load(_idm_results_path+'.npz', allow_pickle=True)
         idm_results = idm_results['arr_0'].item()
-        # idm_av_speed_mean = idm_results['avg_av_speed']
-        # idm_av_speed_std = idm_results['std_av_speed']
-        idm_av_speed_mean = idm_results['avg_all_speed'] * 3600 / 1000
-        idm_av_speed_std = idm_results['std_all_speed'] * 3600 / 1000
-        plt.scatter(_veh_density, idm_av_speed_mean, color='red')
-        plt.plot(_veh_density, idm_av_speed_mean, color='red', label='IDM')
-        plt.fill_between(_veh_density, 
-                         np.squeeze(idm_av_speed_mean+idm_av_speed_std), 
-                         np.squeeze(idm_av_speed_mean-idm_av_speed_std), color='red', alpha=0.10)
+        idm_av_speed_mean = idm_results['avg_av_speed'] * 3600 / 1000
+        idm_av_speed_std = idm_results['std_av_speed'] * 3600 / 1000
+        idm_all_speed_mean = idm_results['avg_all_speed'] * 3600 / 1000
+        idm_all_speed_std = idm_results['std_all_speed'] * 3600 / 1000
 
         _derived_results_path = '/home/amornyos/PhD/Packages/resources/datasets/derived_double_ring_evaluation_results'
         _derived_results_path += '_' + args.dataset_type
@@ -203,15 +233,10 @@ if __name__ == '__main__':
         _derived_results_path += '_' + args.eval_mode
         derived_results = np.load(_derived_results_path+'.npz', allow_pickle=True)
         derived_results = derived_results['arr_0'].item()
-        # derived_av_speed_mean = derived_results['avg_av_speed']
-        # derived_av_speed_std = derived_results['std_av_speed']
-        derived_av_speed_mean = derived_results['avg_all_speed'] * 3600 / 1000
-        derived_av_speed_std = derived_results['std_all_speed'] * 3600 / 1000
-        plt.scatter(_veh_density , derived_av_speed_mean, color='orange')
-        plt.plot(_veh_density , derived_av_speed_mean, color='orange', label='Derived')
-        plt.fill_between(_veh_density , 
-                         np.squeeze(derived_av_speed_mean+derived_av_speed_std), 
-                         np.squeeze(derived_av_speed_mean-derived_av_speed_std), color='orange', alpha=0.25)
+        derived_av_speed_mean = derived_results['avg_av_speed'] * 3600 / 1000
+        derived_av_speed_std = derived_results['std_av_speed'] * 3600 / 1000
+        derived_all_speed_mean = derived_results['avg_all_speed'] * 3600 / 1000
+        derived_all_speed_std = derived_results['std_all_speed'] * 3600 / 1000
 
         _loaded_path = evaluation_path
         _loaded_path += '_' + args.dataset_type
@@ -223,28 +248,118 @@ if __name__ == '__main__':
         gpdp_av_speed_std = np.squeeze(gpdp_results['std_av_speed']) * 3600 / 1000
         gpdp_all_speed_mean = np.squeeze(gpdp_results['avg_all_speed']) * 3600 / 1000
         gpdp_all_speed_std = np.squeeze(gpdp_results['std_all_speed']) * 3600 / 1000
-        # Plot av speed
-        plt.scatter(_veh_density, gpdp_av_speed_mean, color='blue')
-        plt.plot(_veh_density, gpdp_av_speed_mean, color='blue', linestyle='--', label='All-GPDP(Ours)')
-        plt.fill_between(_veh_density, 
-                         gpdp_av_speed_mean+gpdp_av_speed_std, 
-                         gpdp_av_speed_mean-gpdp_av_speed_std, color='blue', hatch='/', alpha=0.10)
-        # Plot all speed
-        plt.scatter(_veh_density, gpdp_all_speed_mean, color='blue')
-        plt.plot(_veh_density, gpdp_all_speed_mean, color='blue', label='All-GPDP(Ours)')
-        plt.fill_between(_veh_density, 
+
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6), dpi=150)
+        # ========= AX1: Plot all vehicles speed (Left Figure)
+        # IDM
+        ax1.scatter(_veh_density, idm_all_speed_mean, color='red')
+        ax1.plot(_veh_density, idm_all_speed_mean, color='red', label='IDM')
+        ax1.fill_between(_veh_density, 
+                         np.squeeze(idm_all_speed_mean+idm_all_speed_std), 
+                         np.squeeze(idm_all_speed_mean-idm_all_speed_std), color='red', alpha=0.10)
+        # Derived
+        ax1.scatter(_veh_density, derived_all_speed_mean, color='orange')
+        ax1.plot(_veh_density, derived_all_speed_mean, color='orange', label='Derived')
+        ax1.fill_between(_veh_density, 
+                         np.squeeze(derived_all_speed_mean+derived_all_speed_std), 
+                         np.squeeze(derived_all_speed_mean-derived_all_speed_std), color='orange', alpha=0.10)
+        # GPDP
+        ax1.scatter(_veh_density, gpdp_all_speed_mean, color='blue')
+        ax1.plot(_veh_density, gpdp_all_speed_mean, color='blue', label='All-GPDP(Ours)')
+        ax1.fill_between(_veh_density, 
                          gpdp_all_speed_mean+gpdp_all_speed_std, 
                          gpdp_all_speed_mean-gpdp_all_speed_std, color='blue', alpha=0.10)
 
+        ax1.set_ylim(0, 6*3600/1000)
+        ax1.grid(True)
+        ax1.legend(fontsize=16, loc='upper right')
 
+        # ========= AX2: Plot AV speed (Right Figure)
+        # IDM
+        ax2.scatter(_veh_density, idm_av_speed_mean, color='red')
+        ax2.plot(_veh_density, idm_av_speed_mean, color='red', label='IDM')
+        ax2.fill_between(_veh_density, 
+                         np.squeeze(idm_av_speed_mean+idm_av_speed_std), 
+                         np.squeeze(idm_av_speed_mean-idm_av_speed_std), color='red', alpha=0.10)
+        # Derived
+        ax2.scatter(_veh_density, derived_av_speed_mean, color='orange')
+        ax2.plot(_veh_density, derived_av_speed_mean, color='orange', label='Derived')
+        ax2.fill_between(_veh_density, 
+                         np.squeeze(derived_av_speed_mean+derived_av_speed_std), 
+                         np.squeeze(derived_av_speed_mean-derived_av_speed_std), color='orange', alpha=0.10)
+        # GPDP
+        ax2.scatter(_veh_density, gpdp_av_speed_mean, color='blue')
+        ax2.plot(_veh_density, gpdp_av_speed_mean, color='blue', label='All-GPDP(Ours)')
+        ax2.fill_between(_veh_density, 
+                         gpdp_av_speed_mean+gpdp_av_speed_std, 
+                         gpdp_av_speed_mean-gpdp_av_speed_std, color='blue', alpha=0.10)
 
-
+        ax2.set_ylim(0, 6*3600/1000)
+        ax2.grid(True)
+        ax2.legend(fontsize=16, loc='upper right')
 
         # plt.ylim(0, 6* 3600 / 1000)
-        plt.xlabel('Vehicle Density (veh/km)')
-        plt.ylabel('All Vehicle Speed (km/hr)')
+        # plt.xlabel('Vehicle Density (veh/km)')
+        # plt.ylabel('All Vehicle Speed (km/hr)')
         # plt.title('Average AV Speed')
-        plt.legend()
-        plt.grid(True)
+        # plt.legend()
+        # plt.grid(True)
+        fig.supxlabel('Vehicle Density (veh/km)', fontsize=20)
+        fig.supylabel('Speed (km/hr)', fontsize=20)
+        ax1.tick_params(axis='both', labelsize=14)
+        ax2.tick_params(axis='both', labelsize=14)
+        # ax1.yticks(fontsize=14)
+        # ax2.xticks(fontsize=14)
+        # ax2.yticks(fontsize=14)
+        plt.tight_layout()
         plt.show()
 
+    # ========== Results Plotting (Visualisation)
+    if args.task == 'plot_action':
+
+        _veh_density = [(i * 1000 / 500) for i in env.num_veh_config]
+
+        _loaded_path = evaluation_path
+        _loaded_path += '_' + args.dataset_type
+        _loaded_path += '_' + args.eval_mode
+        _loaded_path += '_actions_collection'
+
+        gpdp_results = np.load(_loaded_path+'.npy', allow_pickle=True)
+        # gpdp_results = gpdp_results['arr_0'].item()
+        action_0 = gpdp_results[:, 0]
+        action_1 = gpdp_results[:, 1]
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6), dpi=150)
+        # ========= AX1: Plot all vehicles speed (Left Figure)
+        # GPDP
+        ax1.scatter(action_0, action_1, color='blue')
+
+        # ax1.set_ylim(0, 6*3600/1000)
+        # ax1.grid(True)
+        # ax1.legend(fontsize=16, loc='upper right')
+
+        # ========= AX2: Plot AV speed (Right Figure)
+
+        # GPDP
+        ax2.scatter(action_0, action_1, color='blue', alpha=0.2)
+
+        # ax2.set_ylim(0, 6*3600/1000)
+        # ax2.grid(True)
+        # ax2.legend(fontsize=16, loc='upper right')
+
+        # plt.ylim(0, 6* 3600 / 1000)
+        # plt.xlabel('Vehicle Density (veh/km)')
+        # plt.ylabel('All Vehicle Speed (km/hr)')
+        # plt.title('Average AV Speed')
+        # plt.legend()
+        # plt.grid(True)
+        fig.supxlabel('Vehicle Density (veh/km)', fontsize=20)
+        fig.supylabel('Speed (km/hr)', fontsize=20)
+        ax1.tick_params(axis='both', labelsize=14)
+        ax2.tick_params(axis='both', labelsize=14)
+        # ax1.yticks(fontsize=14)
+        # ax2.xticks(fontsize=14)
+        # ax2.yticks(fontsize=14)
+        plt.tight_layout()
+        plt.show()

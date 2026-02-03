@@ -64,7 +64,7 @@ class myExactGP(torch.nn.Module):
 
             # Initialise training data
             _start = 0
-            _slice_idx = np.arange(stop=self.num_sample, step=10)
+            _slice_idx = np.arange(stop=self.num_sample, step=20)
             self.x_train_original = torch.tensor(dataset['observations'][_slice_idx], dtype=torch.float32)
             self.x_train = torch.tensor(dataset['observations'][_slice_idx, :self.x_dim], dtype=torch.float32)
             self.y_train = torch.tensor(dataset['actions'][_slice_idx], dtype=torch.float32)

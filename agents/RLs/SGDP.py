@@ -74,7 +74,7 @@ class StochasticGaussianprocessDiffusionPolicy:
         self.best_norm_reward_training = 0
 
         # Initialise Diffusion Model's Parameters
-        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=25, dec_step=25)
+        self.diffusionParams(schedule='vp', beta_min=0.1, beta_max=10., num_step=50, dec_step=50)
 
         # Initialise neural networks
         self.EPSILON_INPUT_DIM = self.STATE_DIM + self.ACTION_DIM + self.POS_DIM
@@ -381,20 +381,20 @@ class StochasticGaussianprocessDiffusionPolicy:
             batch_reward_tensor = reward_buffer[_sampling_indices[0+(g*_batch_size):_batch_size+(g*_batch_size)]]
             batch_next_state_tensor = next_state_buffer[_sampling_indices[0+(g*_batch_size):_batch_size+(g*_batch_size)]]
 
-            # Prepare data for q learning
-            y_true_1 = _getExpectedCumulativeReturn(inputs=batch_next_state_tensor)
-            y_true_2 = _getExpectedQValues(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1))
-            q_1_loss = _trainQ1Network(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1), y_true=y_true_1) # State-Action network (Q)
-            q_2_loss = _trainVNetwork(inputs=batch_state_tensor, y_true=y_true_2)  # State-Value network (V)
-            q_1_loss_accum += q_1_loss.tolist()
-            q_2_loss_accum += q_2_loss.tolist()
+            # # Prepare data for q learning
+            # y_true_1 = _getExpectedCumulativeReturn(inputs=batch_next_state_tensor)
+            # y_true_2 = _getExpectedQValues(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1))
+            # q_1_loss = _trainQ1Network(inputs=torch.concat([batch_state_tensor, batch_action_tensor], dim=1), y_true=y_true_1) # State-Action network (Q)
+            # q_2_loss = _trainVNetwork(inputs=batch_state_tensor, y_true=y_true_2)  # State-Value network (V)
+            # q_1_loss_accum += q_1_loss.tolist()
+            # q_2_loss_accum += q_2_loss.tolist()
 
-            self.q_1_optimizer.zero_grad()
-            self.q_2_optimizer.zero_grad()
-            q_1_loss.backward(retain_graph=True)
-            q_2_loss.backward(retain_graph=True)
-            self.q_1_optimizer.step()
-            self.q_2_optimizer.step()
+            # self.q_1_optimizer.zero_grad()
+            # self.q_2_optimizer.zero_grad()
+            # q_1_loss.backward(retain_graph=True)
+            # q_2_loss.backward(retain_graph=True)
+            # self.q_1_optimizer.step()
+            # self.q_2_optimizer.step()
 
             # Prepare data for diffusion learning
             if not online:

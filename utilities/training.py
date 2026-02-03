@@ -43,13 +43,13 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
               ' Time: ', round(time()-_start_time, PRECISION)
               )
     
-    # GP training.
-    agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
-    # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
+    # # GP training.
+    # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
+    # # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
+    
     if agent.ALG == 'SGDP':
-        agent.gp_model.myTraining(total_epoch=1000, s_print=True)
+        agent.gp_model.myTraining(total_epoch=300, s_print=True)
     agent.recordSaving(path=agent.training_record_path)
-
 
 # ========== Online Training
 def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):

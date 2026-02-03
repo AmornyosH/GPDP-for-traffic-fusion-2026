@@ -58,7 +58,7 @@ class AutonomousVehicle:
         self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
 
     # Observation Method
-    def getObservation(self, noise=False):
+    def getObservation2(self, noise=False):
         # ----- State conditions (Follow Alex Bayen's paper):
         observation = np.zeros([self.observation_dim], dtype=float)
         observation[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
@@ -177,7 +177,7 @@ class AutonomousVehicle:
         return observation
 
     # State Retrieving Method
-    def getObservation2(self, noise=False):
+    def getObservation(self, noise=False):
 
         # Get simulation time
         _time = traci.simulation.getTime()
@@ -189,6 +189,7 @@ class AutonomousVehicle:
         state[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
         # Get Leader on AV's current lane
         leader_info = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
+        self.leader_veh = leader_info
         # Check if there is a vehicle in front ?
         if leader_info != None:
             # Yes -- There is
@@ -201,6 +202,7 @@ class AutonomousVehicle:
 
         # Get Follower info on AV's current lane
         follower_info = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
+        self.follower_veh = follower_info
         # Check if there is a vehicle behind ?
         if follower_info[0] != '':
             # Yes -- There is
@@ -223,6 +225,8 @@ class AutonomousVehicle:
         # Get the leader and follower info
         neighbor_follower_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
         neighbor_leader_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
+        self.neighbor_follower_veh = neighbor_follower_info
+        self.neighbor_leader_veh = neighbor_leader_info
         # Check if there is a neighbor leader ?
         if len(neighbor_leader_info) != 0:
             # Yes -- There is

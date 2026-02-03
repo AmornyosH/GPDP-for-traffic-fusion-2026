@@ -52,7 +52,7 @@ class DerivedAV:
         self.neighbor_follower_veh = None
 
     # Observation Method
-    def getObservation(self, noise=False):
+    def getObservation2(self, noise=False):
         # ----- State conditions (Follow Alex Bayen's paper):
         observation = np.zeros([self.observation_dim], dtype=float)
         observation[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
@@ -169,6 +169,91 @@ class DerivedAV:
         # print(f'{self.veh_tag} observations: {observation}')
 
         return observation
+
+    # State Retrieving Method
+    def getObservation(self, noise=False):
+
+        # Get simulation time
+        _time = traci.simulation.getTime()
+
+        # ---------------------- Double Ring State Space ----------------------
+        # ----- State condition 2 (Follow Alex Bayen's paper):
+        state = np.zeros([10], dtype=float)
+        state[0] = traci.vehicle.getSpeed(vehID=self.veh_id)  # Get It's speed (m/s)
+        state[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
+        # Get Leader on AV's current lane
+        leader_info = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
+        # Check if there is a vehicle in front ?
+        if leader_info != None:
+            # Yes -- There is
+            state[2] = traci.vehicle.getSpeed(vehID=leader_info[0])
+            state[3] = leader_info[1]
+        else:
+            # No -- There is not
+            state[2] = self.max_speed   # Assign the maximum speed (Assume that the leader is faster than AV.)
+            state[3] = self.detect_dist  # Assign distance = maximum observeable distance.
+
+        # Get Follower info on AV's current lane
+        follower_info = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
+        # Check if there is a vehicle behind ?
+        if follower_info[0] != '':
+            # Yes -- There is
+            state[4] = traci.vehicle.getSpeed(vehID=follower_info[0])
+            state[5] = follower_info[1]
+        else:
+            # No -- There is not
+            state[4] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+            state[5] = self.detect_dist  # Assign distance = maximum observeable distance.
+
+        # Get Leader and follower of the other lane based on the current lane of AV.
+        if state[1] == 0:  # AV is on the outer lane (get left neighbor)
+            # Get the leader and follower of the inner lane (left --> mode bit 1: 0)
+            leader_mode_set = 0b010
+            follower_mode_set = 0b000
+        else:# AV is on the inner lane (get right neighbor)
+            # Get the leaser and follower of the outer lane (right --> mode bit 1: 1)
+            leader_mode_set = 0b011
+            follower_mode_set = 0b001
+        # Get the leader and follower info
+        neighbor_follower_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
+        neighbor_leader_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
+        # Check if there is a neighbor leader ?
+        if len(neighbor_leader_info) != 0:
+            # Yes -- There is
+            state[6] = traci.vehicle.getSpeed(vehID=neighbor_leader_info[0])
+            state[7] = neighbor_leader_info[1]
+        else:
+            # No -- There is not
+            state[6] = self.max_speed   # Assign the maximum speed (Assume that the leader is faster than AV.)
+            state[7] = self.detect_dist  # Assign distance = maximum observeable distance.
+        # Check if there is a neighbor follower ?
+        if len(neighbor_follower_info) != 0:
+            # Yes -- There is
+            state[8] = traci.vehicle.getSpeed(vehID=neighbor_follower_info[0])
+            state[9] = neighbor_follower_info[1]
+        else:
+            # No -- There is not
+            state[8] = self.min_speed  # Assign the minimum speed (Assume that the follower is slower than AV.)
+            state[9] = self.detect_dist  # Assign distance = maximum observeable distance.
+
+        # # Prepare GP inputs
+        # gp_inputs = _prepareInput(excel=True)
+        # self.prev_time_step = _time
+        # self.prev_lead_dis = state[3] if self.env_config == 'double_ring' else state[2]
+
+        # Inject noise to the observation (if noise=True)
+        if noise == True:
+            noise_factor = 5  # If == 0, no noise in the observation
+            for n in range(len(state)):
+                if n == 0:
+                    # No noise in it's own speed
+                    ran_noise = 0
+                else:
+                    ran_noise = np.random.random() * noise_factor
+                state[n] += ran_noise
+
+        # Return state
+        return state
 
     # Action Encoding Method
     def actionEncoding(self, *args):
