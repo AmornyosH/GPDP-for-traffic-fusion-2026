@@ -266,14 +266,15 @@ if __name__ == '__main__':
                          np.squeeze(derived_all_speed_mean-derived_all_speed_std), color='orange', alpha=0.10)
         # GPDP
         ax1.scatter(_veh_density, gpdp_all_speed_mean, color='blue')
-        ax1.plot(_veh_density, gpdp_all_speed_mean, color='blue', label='All-GPDP(Ours)')
+        ax1.plot(_veh_density, gpdp_all_speed_mean, color='blue', label='Ours')
         ax1.fill_between(_veh_density, 
                          gpdp_all_speed_mean+gpdp_all_speed_std, 
                          gpdp_all_speed_mean-gpdp_all_speed_std, color='blue', alpha=0.10)
 
-        ax1.set_ylim(0, 6*3600/1000)
+        ax1.set_ylim(0, 4*3600/1000)
         ax1.grid(True)
         ax1.legend(fontsize=16, loc='upper right')
+        ax1.set_title('Average All Vehicle Speed')
 
         # ========= AX2: Plot AV speed (Right Figure)
         # IDM
@@ -290,14 +291,15 @@ if __name__ == '__main__':
                          np.squeeze(derived_av_speed_mean-derived_av_speed_std), color='orange', alpha=0.10)
         # GPDP
         ax2.scatter(_veh_density, gpdp_av_speed_mean, color='blue')
-        ax2.plot(_veh_density, gpdp_av_speed_mean, color='blue', label='All-GPDP(Ours)')
+        ax2.plot(_veh_density, gpdp_av_speed_mean, color='blue', label='Ours')
         ax2.fill_between(_veh_density, 
                          gpdp_av_speed_mean+gpdp_av_speed_std, 
                          gpdp_av_speed_mean-gpdp_av_speed_std, color='blue', alpha=0.10)
 
-        ax2.set_ylim(0, 6*3600/1000)
+        ax2.set_ylim(0, 4*3600/1000)
         ax2.grid(True)
         ax2.legend(fontsize=16, loc='upper right')
+        ax2.set_title('Average AV Speed')
 
         # plt.ylim(0, 6* 3600 / 1000)
         # plt.xlabel('Vehicle Density (veh/km)')
@@ -354,12 +356,17 @@ if __name__ == '__main__':
         # plt.title('Average AV Speed')
         # plt.legend()
         # plt.grid(True)
-        fig.supxlabel('Vehicle Density (veh/km)', fontsize=20)
-        fig.supylabel('Speed (km/hr)', fontsize=20)
+        fig.supxlabel('Acceleration Action $a_0$', fontsize=20)
+        fig.supylabel('Lane Change Action $a_1$', fontsize=20)
         ax1.tick_params(axis='both', labelsize=14)
         ax2.tick_params(axis='both', labelsize=14)
+
         # ax1.yticks(fontsize=14)
         # ax2.xticks(fontsize=14)
         # ax2.yticks(fontsize=14)
+
+        ax1.grid(True)
+        ax2.grid(True)
+
         plt.tight_layout()
         plt.show()

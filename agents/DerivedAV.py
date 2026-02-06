@@ -183,6 +183,7 @@ class DerivedAV:
         state[1] = traci.vehicle.getLaneIndex(vehID=self.veh_id)  # Get current lane's index (-)
         # Get Leader on AV's current lane
         leader_info = traci.vehicle.getLeader(vehID=self.veh_id, dist=self.detect_dist)
+        self.leader_veh = leader_info
         # Check if there is a vehicle in front ?
         if leader_info != None:
             # Yes -- There is
@@ -195,6 +196,7 @@ class DerivedAV:
 
         # Get Follower info on AV's current lane
         follower_info = traci.vehicle.getFollower(vehID=self.veh_id, dist=self.detect_dist)
+        self.follower_veh = follower_info
         # Check if there is a vehicle behind ?
         if follower_info[0] != '':
             # Yes -- There is
@@ -217,6 +219,8 @@ class DerivedAV:
         # Get the leader and follower info
         neighbor_follower_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=follower_mode_set))
         neighbor_leader_info = np.squeeze(traci.vehicle.getNeighbors(vehID=self.veh_id, mode=leader_mode_set))
+        self.neighbor_follower_veh = neighbor_follower_info
+        self.neighbor_leader_veh = neighbor_leader_info
         # Check if there is a neighbor leader ?
         if len(neighbor_leader_info) != 0:
             # Yes -- There is

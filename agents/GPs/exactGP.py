@@ -41,20 +41,20 @@ class myExactGP(torch.nn.Module):
 
         self.cuda() if cuda else ...
 
-        # Check for the training record file and the response from user...
-        if os.path.isfile(self.training_record_path) is True:
-            print(f'{self.tag} There exists a training record for this agent. Do you wish to load the exist one ?')
-            _ans_1 = input(f'{self.tag} Press [y/n] and enter: ')
-        else:
-            _ans_1 = 'n'
-
         # # Check for the training record file and the response from user...
-        # if load:
-        #     _ans_1 = 'y'
-        #     if not os.path.isfile(self.training_record_path) is True:
-        #         print(f'{self.tag} There is no exists a training record for this agent !!')
-        # else: 
+        # if os.path.isfile(self.training_record_path) is True:
+        #     print(f'{self.tag} There exists a training record for this agent. Do you wish to load the exist one ?')
+        #     _ans_1 = input(f'{self.tag} Press [y/n] and enter: ')
+        # else:
         #     _ans_1 = 'n'
+
+        # Check for the training record file and the response from user...
+        if load:
+            _ans_1 = 'y'
+            if not os.path.isfile(self.training_record_path) is True:
+                print(f'{self.tag} There is no exists a training record for this agent !!')
+        else: 
+            _ans_1 = 'n'
 
         # Check for the answer...
         if _ans_1 == 'n' or _ans_1=='N' or _ans_1=='No' or _ans_1=='NO':
