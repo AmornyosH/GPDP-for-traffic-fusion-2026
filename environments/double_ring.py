@@ -83,7 +83,7 @@ class DoubleRing:
                     'default_depart_lane_index': 0,
                     }
 
-    def reset(self, veh:object, num_veh:int=None, imposter:bool=False, lane:int=None):
+    def reset(self, veh:object, num_veh:int=None, lane:int=None):
         '''
         Add the AV to the environment (SUMO) and perform run-in steps, which contain adding 
         all vehicles to the environment, and warming up, which allows the congestion to occur. 
@@ -160,8 +160,8 @@ class DoubleRing:
             #     traci.vehicle.setAcceleration(vehID=i, acceleration=_accel+np.random.normal(0, 0.2), duration=self.params_dict['time_step'])
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=np.random.normal(0, 0.2))  # AV
             # traci.vehicle.setSpeed(vehID=veh.veh_id, speed=5.25)  # AV
-            _obs = veh.getObservation()
-            veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=0)
+            # _obs = veh.getObservation()
+            # veh.actionPerform(state=_obs, s_print=False, pred=True, lane_id=0)
             traci.simulationStep()
             _step += 1
         # ==================================== Warmup steps end ====================================
@@ -234,38 +234,12 @@ class DoubleRing:
         for i in range(num_veh-1):
             traci.vehicle.setSpeed(vehID=i, speed=-1)
 
-    def assignActions(self, action):
-        # Acceleration
-        # Lateral action
-        ...
-
     def step(self, veh:object):
         # Interact with SUMO
         # Return next_observation, reward, terminated, truncrated
-
-        # self.assignActions(action)  # Assign actions.
         traci.simulationStep()  # Taking a step.
-
         _next_state, _reward = veh.getNextObsAndReward()
         _terminated = False
         _truncrated = False
-
-        # # ++++++ Noise imposter process (Omitted if noise_imp == False) ++++++
-        # # If noise_inj == True, Randomly reduce the speed or stop one of the vehicle 
-        # if step > ((_steady_state_time + params_dict['horizon']) * 0.2) and IMPOSTER:
-        #     impos_lane = lane_id[int(state[1])]  # Gather current lane of AV. (0=outer, 1=inner)
-        #     if traci.lane.getLastStepVehicleIDs(laneID=impos_lane) == ():  # Check if there is any vehicle on the current lane of AV
-        #         # If there is no vehicle on the current lane of AV, there must be vehicle on the opposite site (left-right).
-        #         if state[1] == 0:  # If AV is currently on the outer lane.
-        #             impos_lane = lane_id[2]  # check imposter lane on 
-        #         elif state[1] == 1:
-        #             impos_lane = lane_id[3]
-        #     # traci.lane.getLastStepVehicleIDs(laneID=agent.state[1])
-        #     prev_impos_veh_id = impos_veh_id
-        #     traci.vehicle.setSpeed(vehID=prev_impos_veh_id, speed=-1)  # Reset current imposter speed (back to SUMO)
-        #     # impos_veh_id = np.random.choice(traci.lane.getLastStepVehicleIDs(laneID=impos_lane))  # Generate new imposter vehicle id.
-        #     impos_veh_speed = 0.5  # Slow the imposter vehicle down.
-        #     traci.vehicle.setSpeed(vehID=impos_veh_id, speed=impos_veh_speed)  
-
         return _next_state, _reward, _terminated, _truncrated
         ...

@@ -19,6 +19,7 @@ def getPaths(operating_system:str, alg:str, env_name:str):
             # This is my PC
             dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset'.format(env_name)
             training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
+            evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_evaluation_results'.format(alg, env_name)
         elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
             # This is Xingyu's PC.
             dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset'.format(env_name)
