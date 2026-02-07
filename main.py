@@ -173,6 +173,7 @@ if __name__ == '__main__':
                 'std_av_speed': np.vstack(_total_std_av_speed), 
                 'std_all_speed': np.vstack(_total_std_all_speed)})
 
+    # ========== Action Collection Tasks (Visualisation)
     if args.task == 'actions_collection':
         _total_return = []
         _total_avg_av_speed = []
@@ -227,6 +228,13 @@ if __name__ == '__main__':
         derived_results = np.load(_derived_results_path+'.npz', allow_pickle=True)
         speed_plots.plot_speed_results(results=derived_results, density=_veh_density, label='derived', color='orange')
 
+        # Load TRPO results
+        _trpo_results_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/trpo_results_shifted'
+        # _trpo_results_path += '_' + args.dataset_type
+        # _trpo_results_path += '_' + args.eval_mode
+        trpo_results = np.load(_trpo_results_path+'.npz', allow_pickle=True)
+        speed_plots.plot_speed_results(results=trpo_results, density=_veh_density, label='TRPO', color='purple')
+        
         # Load our proposed policy results
         _loaded_path = evaluation_path
         _loaded_path += '_' + args.dataset_type

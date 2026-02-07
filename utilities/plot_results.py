@@ -21,10 +21,10 @@ class ResultsPlots:
                             np.squeeze(all_speed_mean+all_speed_std), 
                             np.squeeze(all_speed_mean-all_speed_std), color=color, alpha=0.10)
 
-        self.ax1.set_ylim(0, 4*3600/1000)
+        # self.ax1.set_ylim(0, 4*3600/1000)
         self.ax1.grid(True)
         self.ax1.legend(fontsize=16, loc='upper right')
-        self.ax1.set_title('Average All Vehicle Speed')
+        # self.ax1.set_title('Average All Vehicle Speed')
 
         # ========= AX2: Plot AV speed (Right Figure)
         self.ax2.scatter(_veh_density, av_speed_mean, color=color)
@@ -32,10 +32,10 @@ class ResultsPlots:
         self.ax2.fill_between(_veh_density, 
                             np.squeeze(av_speed_mean+av_speed_std), 
                             np.squeeze(av_speed_mean-av_speed_std), color=color, alpha=0.10)
-        self.ax2.set_ylim(0, 4*3600/1000)
+        # self.ax2.set_ylim(0, 4*3600/1000)
         self.ax2.grid(True)
         self.ax2.legend(fontsize=16, loc='upper right')
-        self.ax2.set_title('Average AV Speed')
+        # self.ax2.set_title('Average AV Speed')
 
     def show_plots(self):
         self.fig.supxlabel('Vehicle Density (veh/km)', fontsize=20)
