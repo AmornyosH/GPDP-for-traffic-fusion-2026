@@ -26,10 +26,10 @@ class ActionsPlots:
 
         if label == 'Ours':
             _target_ax = self.ax2
-            self.sc = _target_ax.scatter(action_0, action_1, c=_time, alpha=1, cmap='viridis')
+            self.sc = _target_ax.scatter(action_0, action_1, c=_time, alpha=1, cmap='plasma')
         else:
             _target_ax = self.ax1
-            _target_ax.scatter(action_0, action_1, c=_time, alpha=1, cmap='viridis')
+            _target_ax.scatter(action_0, action_1, c=_time, alpha=1, cmap='plasma')
 
     def plot_dataset_actions(self, results, label):
         _action_0 = results[:, 0]
@@ -60,15 +60,17 @@ class ActionsPlots:
     def show_plots(self):
         self.ax1.set_xlim(-1, 1)
         self.ax1.set_ylim(-1, 1)
-        # self.ax1.grid(True)
+        self.ax1.grid(True)
         self.ax1.tick_params(axis='both', labelsize=14)
-        self.ax1.set_title('$\mathbf{a}\sim\\boldsymbol{\pi}_{\\text{TRPO}}$', fontsize=16)
+        # self.ax1.set_title('$\mathbf{a}\sim\\boldsymbol{\pi}_{\\text{TRPO}}$', fontsize=16)
+        self.ax1.text(0.70, 0.9, 'TRPO', color='purple', fontsize=16)
         
         self.ax2.set_xlim(-1, 1)
         self.ax2.set_ylim(-1, 1)
-        # self.ax2.grid(True)
+        self.ax2.grid(True)
         self.ax2.tick_params(axis='both', labelsize=14)
-        self.ax2.set_title('$\mathbf{a}\sim\\boldsymbol{\pi}_{\\boldsymbol{\\theta}}=\\tilde{p}_{\\boldsymbol{\\theta}}(\mathbf{a}^{0:I}|\mathbf{o})$', fontsize=16)
+        # self.ax2.set_title('$\mathbf{a}\sim\\boldsymbol{\pi}_{\\boldsymbol{\\theta}}=\\tilde{p}_{\\boldsymbol{\\theta}}(\mathbf{a}^{0:I}|\mathbf{o})$', fontsize=16)
+        self.ax2.text(0.725, 0.9, 'Ours', color='blue', fontsize=16)
         
         self.ax1.set_aspect("equal")
         self.ax2.set_aspect("equal")
@@ -87,8 +89,9 @@ class ActionsPlots:
         # cbar = self.fig.colorbar(self.sc, ax=self.ax2, shrink=0.7)
         cbar.set_label('Time', fontsize=14, rotation=90)
         cbar.ax.hlines(200, xmin=0, xmax=1, colors='red', linewidth=5)
-        cbar.ax.text(0.55, 500, "$T_t\\neq T_{\\text{train}} $", color='white', ha='center', va='center', fontsize=14, rotation=90)
-        cbar.ax.text(0.55, 100, "$T_t = T_{\\text{train}}$", color='white', ha='center', va='center', fontsize=14, rotation=90)
+        cbar.ax.text(0.55, 500, "$T_{\\text{test}}\\neq T_{\\text{train}} $", color='white', ha='center', va='center', fontsize=14, rotation=90)
+        # cbar.ax.text(0.55, 150, "$T_{\\text{test}} = T_{\\text{train}}$", color='white', ha='center', va='center', fontsize=14, rotation=90)
+        cbar.ax.text(0.55, 100, "$T_{\\text{train}}$", color='white', ha='center', va='center', fontsize=14, rotation=90)
         
         # # Custom legend handles
         # # hollow = Line2D([0], [0], marker='o', color='w', label='Hollow Circle',
@@ -111,6 +114,6 @@ class ActionsPlots:
         # self.ax1.legend(loc='upper right', fontsize=16)
         # self.fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
         plt.tight_layout()
-        # plt.show()
-        plt.savefig("C:/Amornyos/PhD/Materials/action_space_shifted_fusion_1.png", dpi=300)  # 300 DPI for high quality
+        plt.show()
+        # plt.savefig("C:/Amornyos/PhD/Materials/action_space_shifted_fusion_1.png", dpi=300)  # 300 DPI for high quality
         ...

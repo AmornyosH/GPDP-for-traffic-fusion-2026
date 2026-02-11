@@ -229,7 +229,8 @@ if __name__ == '__main__':
         speed_plots.plot_speed_results(results=derived_results, density=_veh_density, label='derived', color='orange')
 
         # Load TRPO results
-        _trpo_results_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/trpo_results_shifted'
+        # _trpo_results_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/trpo_results_shifted'
+        _trpo_results_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/trpo_results_standard'
         # _trpo_results_path += '_' + args.dataset_type
         # _trpo_results_path += '_' + args.eval_mode
         trpo_results = np.load(_trpo_results_path+'.npz', allow_pickle=True)
