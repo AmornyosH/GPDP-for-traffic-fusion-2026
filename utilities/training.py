@@ -3,7 +3,6 @@ import torch
 from time import time
 
 from agents.AV import AutonomousVehicle
-from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
 
 TAG = '(Training) ----->'
 CAUTION_TAG = '(Training) !!!!!>'
@@ -15,9 +14,6 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     if alg == 'GPDP':
         from agents.RLs.GPDP import GaussianProcessDiffusionPolicy
         agent = GaussianProcessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, load=cont)
-    elif alg == 'SGDQ':
-        from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
-        agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, load=cont)
     else:
         print(f'{CAUTION_TAG} Please provide validable algorithm name. Program is terminated!')
         exit()

@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GPDP IEEE_Trans_ITS PyTorch Args')
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
-    parser.add_argument('--alg', default="GPDP", help='Algorithm: ["GPDP", "SGDQ", "derived", "IDM"], default:GPDP')
+    parser.add_argument('--alg', default="GPDP", help='Algorithm: ["GPDP", "derived", "IDM"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--dataset_type', default='expert')
     parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')

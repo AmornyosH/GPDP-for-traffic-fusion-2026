@@ -186,7 +186,7 @@ When prompted, enter `offline` (or `online` for continued environment interactio
 
 | Argument | Options | Default |
 |---|---|---|
-| `--alg` | `GPDP`, `SGDQ` | `GPDP` |
+| `--alg` | `GPDP` | `GPDP` |
 | `--gradient_step` | integer | `200000` |
 | `--load` | flag — resume from checkpoint | off |
 
