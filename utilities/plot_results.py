@@ -37,11 +37,13 @@ class ResultsPlots:
         self.ax2.legend(fontsize=16, loc='upper right')
         # self.ax2.set_title('Average AV Speed')
 
-    def show_plots(self):
+    def show_plots(self, save_path: str = None):
         self.fig.supxlabel('Vehicle Density (veh/km)', fontsize=20)
         self.fig.supylabel('Speed (km/hr)', fontsize=20)
         self.ax1.tick_params(axis='both', labelsize=14)
         self.ax2.tick_params(axis='both', labelsize=14)
         plt.tight_layout()
+        if save_path:
+            self.fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f'Figure saved to {save_path}')
         plt.show()
-        ...

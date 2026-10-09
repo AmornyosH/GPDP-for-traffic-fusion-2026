@@ -12,9 +12,9 @@ PRECISION = 4
 # ========== Offline Training
 def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, total_steps:int):
     # Initialise agent's object
-    if alg == 'SGDP':
-        from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
-        agent = StochasticGaussianprocessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, load=cont)
+    if alg == 'GPDP':
+        from agents.RLs.GPDP import GaussianProcessDiffusionPolicy
+        agent = GaussianProcessDiffusionPolicy(params_dict=env.params_dict, dataset=dataset, load=cont)
     elif alg == 'SGDQ':
         from agents.RLs.SGDQ import StochasticGaussianprocessDiffusionQlearning
         agent = StochasticGaussianprocessDiffusionQlearning(params_dict=env.params_dict, dataset=dataset, load=cont)
@@ -47,7 +47,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
     # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train)
     # # agent.gp_model.y_train = agent.getAlteredObservation(states=agent.gp_model.x_train_original)
     
-    if agent.ALG == 'SGDP':
+    if agent.ALG == 'GPDP':
         agent.gp_model.myTraining(total_epoch=300, s_print=True)
     agent.recordSaving(path=agent.training_record_path)
 
@@ -55,7 +55,7 @@ def offlineTraining(path:str, env:object, alg:str, cont:bool, dataset:dict, tota
 def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, dataset:dict, total_steps:int, imposter:bool=False):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
-    if alg == 'SGDP':
+    if alg == 'GPDP':
         agent = AutonomousVehicle(load=True, online=False, params_dict=env.params_dict, dataset=dataset, id='my_AV')
 
     # Initialise MDP transitions and others
@@ -169,7 +169,7 @@ def onlineTraining(path:str, env:object, num_veh:int, alg:str, cont:bool, datase
                                                     ', Depart_lane: ', _observation[1])
 
         # Train GP
-        # For SGDP, the GPR model is trained seperately. 
+        # For GPDP, the GPR model is trained seperately.
         # agent.controller.gp_model.prepareTempData(temp_states=np.vstack(observations_buffer).reshape(-1, 10), 
         #                                           temp_actions=np.vstack(actions_buffer).reshape(-1, 2))
         agent.controller.gp_model.y_train = agent.controller.getAlteredObservation(states=agent.controller.gp_model.x_train)

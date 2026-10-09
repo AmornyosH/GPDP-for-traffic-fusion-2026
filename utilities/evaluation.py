@@ -10,7 +10,7 @@ from agents.DerivedAV import DerivedAV
 def sumoInteraction(env:object, num_veh:int, alg:str, dataset:dict, load:bool, imposter:bool=False, eval_time:int=1):
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Initialise vehicle objects
-    if alg == 'SGDP':
+    if alg == 'GPDP':
         agent = AutonomousVehicle(load=load, params_dict=env.params_dict, dataset=dataset, id='my_AV', online=False, num_veh=num_veh)
     elif alg == 'derived':
         agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived', num_veh=num_veh)

@@ -2,7 +2,7 @@
 
 **Gaussian Process Diffusion Policy (GPDP) for Autonomous Vehicles in Mixed Traffic**
 
-A PhD research implementation of the **Stochastic Gaussian Process Diffusion Policy (SGDP)** — an offline reinforcement learning algorithm that combines Gaussian Processes with Diffusion Models to control a single autonomous vehicle (AV) in a mixed-traffic ring road, improving overall traffic flow in congested scenarios.
+A PhD research implementation of the **Stochastic Gaussian Process Diffusion Policy (GPDP)** — an offline reinforcement learning algorithm that combines Gaussian Processes with Diffusion Models to control a single autonomous vehicle (AV) in a mixed-traffic ring road, improving overall traffic flow in congested scenarios.
 
 Simulations are built on [SUMO (Simulation of Urban Mobility)](https://sumo.dlr.de/).
 
@@ -10,11 +10,10 @@ Simulations are built on [SUMO (Simulation of Urban Mobility)](https://sumo.dlr.
 
 ## Algorithm Overview
 
-SGDP learns from offline expert demonstrations (no live environment interaction during training). The policy uses:
+GPDP learns from offline expert demonstrations (no live environment interaction during training). The policy uses:
 
 - **Diffusion model** (VP schedule, 50 forward + 50 denoising steps) to generate actions.
-- **Gaussian Process** (Exact GP or Sparse Variational GP) to model uncertainty and shape the policy.
-- **MLP value functions** (q₁, q₂) trained with an offline RL objective.
+- **Gaussian Process** (Exact GP) to model uncertainty and shape the policy.
 
 At test time, the AV observes a 10-dimensional state (own speed, lane, plus leader/follower/neighbor vehicle kinematics) and outputs a 2-dimensional action (longitudinal acceleration ∈ [−1.5, 1.0] m/s², lateral lane-change command).
 
@@ -26,7 +25,7 @@ At test time, the AV observes a 10-dimensional state (own speed, lane, plus lead
 GPDP-for-traffic-fusion-2026/
 ├── main.py                        # Entry point — dataset / training / testing / plotting
 ├── agents/
-│   ├── AV.py                      # AV agent using SGDP controller
+│   ├── AV.py                      # AV agent using GPDP controller
 │   ├── DerivedAV.py               # Rule-based expert agent
 │   ├── IDM.py                     # Intelligent Driver Model baseline
 │   ├── RandomAV.py                # Random-action baseline
@@ -34,8 +33,7 @@ GPDP-for-traffic-fusion-2026/
 │   │   ├── exactGP.py             # Exact GP with RBF kernel
 │   │   └── SVGP.py                # Sparse Variational GP
 │   └── RLs/
-│       ├── SGDP.py                # Main algorithm: SGDP
-│       └── SGDQ.py                # Q-learning variant
+│       ├── GPDP.py                # Main algorithm: GPDP
 ├── environments/
 │   └── double_ring/
 │       ├── double_ring.py         # SUMO environment wrapper
@@ -107,8 +105,8 @@ After that, all commands work with no extra flags:
 
 ```bash
 python main.py --task dataset  --dataset_type expert
-python main.py --task training --alg SGDP
-python main.py --task testing  --alg SGDP --load
+python main.py --task training --alg GPDP
+python main.py --task testing  --alg GPDP --load
 ```
 
 ### Alternative: CLI flags (one-off override)
@@ -128,63 +126,17 @@ python main.py --task dataset \
 CLI flags  >  config.json  >  hardcoded defaults (miscellaneous.py)
 ```
 
-The algorithm and environment names are appended automatically, e.g. `train_path: /data` → `/data/SGDP_double_ring_training_records.pth`.
+The algorithm and environment names are appended automatically, e.g. `train_path: /data` → `/data/GPDP_double_ring_training_records.pth`.
 
 ---
 
 ## Dataset Collection
 
-The offline dataset **D = {o_n, a_n}^{N−1}_{n=0}** consists of MDP transitions collected by running the **DerivedAV (expert)** behaviour policy in SUMO, following the procedure in Section V of the paper.
+Run the following command to collect the offline dataset. You will be prompted to enter the number of transitions (the paper uses 1 000 000):
 
-### Collection procedure
-
-1. **Warmup** — after all vehicles are deployed, the simulation runs for **500 / δ = 5 000 steps** (δ = 0.1 s) under IDM control so that stop-and-go congestion forms naturally before any data is recorded.
-
-2. **Trajectory rollout** — the DerivedAV then runs for **H = 1 000 / δ = 10 000 steps**, and every transition (o_t, a_t, r_{t+1}, o_{t+1}) is stored.
-
-3. **Optimal + sub-optimal mixing** — to expose the policy to the full action distribution, the dataset is split equally:
-   - **First half** — DerivedAV departs and stays in the **outer lane (lane 0)**, which yields higher average speed → *optimal* expert actions.
-   - **Second half** — DerivedAV departs and stays in the **inner lane (lane 1)**, which yields lower average speed → *sub-optimal* actions.
-
-   This mirrors the paper statement: *"We also mix the data in D with sub-optimal actions by running the derived policy in the inner lane of the system, which provides a lower speed than running the AV in the outer lane."*
-
-4. **Density coverage** — vehicle count cycles through **[40, 42, 44, 46, 48]** across trajectories so that the dataset covers the full evaluation density range.
-
-5. **Target size** — the paper uses **N = 10⁶** transitions. You can specify any size when prompted.
-
-### MDP observation vector (dim = 10)
-
+```bash
+python main.py --task dataset --env double_ring --dataset_type expert
 ```
-o = [v_AV, l_AV, v_L, d_L, v_F, d_F, v_nL, d_nL, v_nF, d_nF]
-```
-
-| Index | Symbol | Description |
-|---|---|---|
-| 0 | v_AV | AV speed (m/s) |
-| 1 | l_AV | AV lane index (0 = outer, 1 = inner) |
-| 2 | v_L | Leader speed (m/s) |
-| 3 | d_L | Distance to leader (m) |
-| 4 | v_F | Follower speed (m/s) |
-| 5 | d_F | Distance to follower (m) |
-| 6 | v_nL | Neighbour-lane leader speed (m/s) |
-| 7 | d_nL | Distance to neighbour-lane leader (m) |
-| 8 | v_nF | Neighbour-lane follower speed (m/s) |
-| 9 | d_nF | Distance to neighbour-lane follower (m) |
-
-### Action encoding (dim = 2, diffusion space [−1, 1])
-
-The raw SUMO actions are encoded into the diffusion output space before storage:
-
-| Index | Raw space | Encoded space | Conversion |
-|---|---|---|---|
-| 0 | a_accel ∈ [−1.5, 1.0] m/s² | [−1, 1] | linear mapping |
-| 1 | a_lane ∈ {0, 1} | outer → +0.5, inner → −0.5 | Gaussian centred at ±0.5, σ = 0.005 |
-
-### Reward
-
-r_{t+1} = (v_AV + v_L + v_F + v_nL + v_nF) / (5 × v_max)
-
-Global average speed of the 5 observed vehicles, normalised by maximum speed (10 m/s).
 
 ### Dataset types
 
@@ -224,17 +176,17 @@ python main.py --task dataset --env double_ring --dataset_type expert
 - You will be prompted to enter the number of data points (paper uses `1000000`).
 - Saves `<dataset_path>_<type>.npz`.
 
-### 2. Train SGDP
+### 2. Train GPDP
 
 ```bash
-python main.py --task training --alg SGDP --dataset_type expert --gradient_step 200000
+python main.py --task training --alg GPDP --dataset_type expert --gradient_step 200000
 ```
 
 When prompted, enter `offline` (or `online` for continued environment interaction).
 
 | Argument | Options | Default |
 |---|---|---|
-| `--alg` | `SGDP`, `SGDQ` | `SGDP` |
+| `--alg` | `GPDP`, `SGDQ` | `GPDP` |
 | `--gradient_step` | integer | `200000` |
 | `--load` | flag — resume from checkpoint | off |
 
@@ -243,7 +195,7 @@ Training saves a PyTorch checkpoint (`.pth`) to `<training_record_path>`.
 ### 3. Evaluate a policy
 
 ```bash
-python main.py --task testing --alg SGDP --dataset_type expert --eval_mode standard --load
+python main.py --task testing --alg GPDP --dataset_type expert --eval_mode standard --load
 ```
 
 Evaluates across vehicle densities `[40, 42, 44, 46, 48]` with 10 runs each (1 000 timesteps per run). Use `--render` to open the SUMO GUI.
@@ -261,7 +213,7 @@ Results are saved to `<evaluation_path>_<dataset_type>_<eval_mode>.npz`.
 python main.py --task plot --dataset_type expert --eval_mode standard
 ```
 
-Produces a **mean vehicle speed vs. traffic density** plot comparing IDM, DerivedAV (Expert), TRPO, and SGDP (Ours).
+Produces a **mean vehicle speed vs. traffic density** plot comparing IDM, DerivedAV (Expert), TRPO, and GPDP (Ours).
 
 ### 5. Plot action distributions
 
@@ -269,7 +221,7 @@ Produces a **mean vehicle speed vs. traffic density** plot comparing IDM, Derive
 python main.py --task plot_action --dataset_type expert --eval_mode standard
 ```
 
-Produces scatter plots of longitudinal vs. lateral actions, comparing dataset actions, TRPO, and SGDP.
+Produces scatter plots of longitudinal vs. lateral actions, comparing dataset actions, TRPO, and GPDP.
 
 ---
 
@@ -290,7 +242,7 @@ Produces scatter plots of longitudinal vs. lateral actions, comparing dataset ac
 
 | Agent | Description |
 |---|---|
-| **SGDP** (Ours) | Stochastic GP Diffusion Policy — proposed algorithm |
+| **GPDP** (Ours) | GP Diffusion Policy — proposed algorithm |
 | **DerivedAV** (Expert) | Rule-based expert: accelerate/decelerate towards target speed |
 | **IDM** | Intelligent Driver Model — SUMO default car-following model |
 | **RandomAV** | Uniformly random actions — weakest baseline |
@@ -300,21 +252,55 @@ Produces scatter plots of longitudinal vs. lateral actions, comparing dataset ac
 
 ## Results
 
-Evaluation metric: **mean vehicle speed (km/h)** across traffic densities 80 – 96 veh/km (corresponding to 40 – 48 vehicles on a 500 m double-ring road).
+Evaluation metric: **mean vehicle speed (km/h)** across 5 traffic density configurations {80, 84, 88, 92, 96} veh/km (corresponding to {40, 42, 44, 46, 48} vehicles on the 500 m double-ring road). All results are averaged over 10 trajectories with 10 random seeds.
 
-Key findings:
-- SGDP trained on expert offline data achieves speeds comparable to or exceeding the rule-based expert (DerivedAV) across all tested densities.
-- SGDP outperforms online RL (TRPO) in the shifted (distribution-shifted) evaluation mode, demonstrating improved robustness via GP-based uncertainty modelling.
-- The IDM baseline degrades significantly at high density, while SGDP maintains smoother traffic flow.
+### Non-stationary traffic (shifted dynamics)
 
-Output files after evaluation:
+![Speed results — shifted](figures/speed_results_shifted.png)
+
+An imposter vehicle suddenly slows to ~1.8 km/h at t = 200 s, introducing a distribution shift unseen during training.
+
+| Method | Avg all-vehicle speed (km/h) | Avg AV speed (km/h) |
+|---|---|---|
+| **GPDP (Ours)** | **~8 – 11** | significantly higher |
+| DerivedAV (Expert) | lower than GPDP | lower than GPDP |
+| IDM | lowest | lowest |
+| TRPO | lower than GPDP | lower than GPDP |
+
+- GPDP achieves **~30% higher overall vehicle speed** than baselines under dynamics shift.
+- GPDP's AV speed is **~60% higher** than baselines under dynamics shift.
+- TRPO, trained under stationary dynamics, degrades significantly when the dynamics shift occurs because its policy stays concentrated in actions that were optimal during training.
+- GPDP adapts by shifting probability mass toward actions in the lower diffusion space (a¹ ≈ −0.50), which become beneficial after the shift — enabled by the GP uncertainty estimate increasing Σω when the test observation is far from training data.
+
+### Stationary traffic (standard dynamics)
+
+![Speed results — standard](figures/speed_results_standard.png)
+
+No dynamics shift; all vehicles follow their normal control algorithms throughout.
+
+| Method | Avg all-vehicle speed (km/h) |
+|---|---|
+| **GPDP (Ours)** | comparable to DerivedAV |
+| DerivedAV (Expert) | best / comparable to GPDP |
+| TRPO | competitive at highest density (92 – 96 veh/km) |
+| IDM | lowest |
+
+- GPDP matches expert-level (DerivedAV) performance across all density configurations under normal conditions, confirming the behaviour-cloning objective is well satisfied.
+
+### Action distributions (shifted dynamics)
+
+![Action distribution — shifted](figures/action_distribution_shifted.png)
+
+TRPO (left) concentrates actions in the upper region (a¹ ≈ +0.50, good under T_train) and fails to explore after the shift. GPDP (right) shifts mass toward the lower region (a¹ ≈ −0.50) after t = 200 s, recovering performance. Point colour encodes evaluation time; the red marker on the colourbar indicates the dynamics-shift time t = t′.
+
+### Output files
 
 ```
-<evaluation_path>_expert_standard.npz   # standard scenario results
-<evaluation_path>_expert_shifted.npz    # robustness (shifted) results
+<eval_path>_expert_standard.npz   # stationary scenario
+<eval_path>_expert_shifted.npz    # non-stationary (dynamics shift) scenario
 ```
 
-Each `.npz` contains: `num_veh`, `accum_reward`, `avg_av_speed`, `avg_all_speed`, `std_av_speed`, `std_all_speed`.
+Each `.npz` contains arrays: `accum_reward`, `avg_av_speed`, `avg_all_speed`, `std_av_speed`, `std_all_speed` — one entry per density configuration.
 
 ---
 

@@ -150,7 +150,7 @@ def datasetCreation(env: object, num_data: int, type: str = 'expert'):
 
     # ---------------------------------------------------------------------- #
     # Assemble dataset dictionary.                                            #
-    # Keys match what SGDP, miscellaneous.py, and the GP models expect.      #
+    # Keys match what GPDP, miscellaneous.py, and the GP models expect.      #
     # ---------------------------------------------------------------------- #
     obs_dim = env.params_dict['observation_dim']
     act_dim = env.params_dict['action_dim']

@@ -21,15 +21,15 @@ from time import time
 import numpy as np
 import os
 
-class StochasticGaussianprocessDiffusionPolicy:
+class GaussianProcessDiffusionPolicy:
     def __init__(self, params_dict:dict, dataset:dict, load:bool=False, online:bool=False):
-        self.ALG = 'SGDP'
+        self.ALG = 'GPDP'
         self.ENV_CONFIG = params_dict['environment']
         self.STATE_DIM = int(params_dict['observation_dim'])
         self.ACTION_DIM = int(params_dict['action_dim'])
         self.params_dict = params_dict
-        self.tag = '(SGDP) ----->'
-        self.caution_tag = '(SGDP) !!!!!>'
+        self.tag = '(GPDP) ----->'
+        self.caution_tag = '(GPDP) !!!!!>'
         self.num_action_candidate = 16
         self.online = online
         
@@ -58,10 +58,10 @@ class StochasticGaussianprocessDiffusionPolicy:
             import pathlib
 
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record'
-            self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
-            self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
-            self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+            self.training_record_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_online_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
             # DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
             # self.training_record_path = f'{DESKTOP_PATH}/{self.ALG}_{self.ENV_CONFIG}_training_record'

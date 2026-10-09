@@ -57,7 +57,7 @@ class ActionsPlots:
         self.ax2.text(-0.25, -0.65, 'Poor in $T_{\\text{train}}$', fontsize=14)
 
 
-    def show_plots(self):
+    def show_plots(self, save_path: str = None):
         self.ax1.set_xlim(-1, 1)
         self.ax1.set_ylim(-1, 1)
         self.ax1.grid(True)
@@ -114,6 +114,7 @@ class ActionsPlots:
         # self.ax1.legend(loc='upper right', fontsize=16)
         # self.fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
         plt.tight_layout()
+        if save_path:
+            self.fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f'Figure saved to {save_path}')
         plt.show()
-        # plt.savefig("C:/Amornyos/PhD/Materials/action_space_shifted_fusion_1.png", dpi=300)  # 300 DPI for high quality
-        ...

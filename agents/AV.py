@@ -11,7 +11,7 @@ import torch
 import random
 
 from utilities import miscellaneous as misc
-from agents.RLs.SGDP import StochasticGaussianprocessDiffusionPolicy
+from agents.RLs.GPDP import GaussianProcessDiffusionPolicy
 
 
 class AutonomousVehicle:
@@ -55,7 +55,7 @@ class AutonomousVehicle:
         self.previous_action_lat = 0
 
         # Initialise High Level control algorithm 
-        self.controller = StochasticGaussianprocessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
+        self.controller = GaussianProcessDiffusionPolicy(params_dict=params_dict, dataset=dataset, load=load, online=online)
 
     # Observation Method
     def getObservation2(self, noise=False):

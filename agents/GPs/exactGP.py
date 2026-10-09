@@ -34,10 +34,10 @@ class myExactGP(torch.nn.Module):
             print(f'{self.caution_tag}', 'This is not my PC. Saved the training record to the desktop.')
             import pathlib
             DESKTOP_PATH = pathlib.Path.home() / 'Desktop'
-            self.training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record'
-            self.online_training_record_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_online_training_record'
-            self.training_checkpoint_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record_checkpoint'
-            self.evaluation_path = f'{DESKTOP_PATH}/SGDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
+            self.training_record_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record'
+            self.online_training_record_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_gp_online_training_record'
+            self.training_checkpoint_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_gp_training_record_checkpoint'
+            self.evaluation_path = f'{DESKTOP_PATH}/GPDP/{self.ALG}_{self.ENV_CONFIG}_evaluation_results'
 
         self.cuda() if cuda else ...
 

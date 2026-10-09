@@ -73,10 +73,10 @@ if __name__ == '__main__':
     torch.manual_seed(seed)
 
     # ========== Define arguments parser. 
-    parser = argparse.ArgumentParser(description='SGDP IEEE_Trans_ITS PyTorch Args')
+    parser = argparse.ArgumentParser(description='GPDP IEEE_Trans_ITS PyTorch Args')
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
-    parser.add_argument('--alg', default="SGDP", help='Algorithm: ["SAC-S", "SAC-D", "D-QL", "GPDP"], default:GPDP')
+    parser.add_argument('--alg', default="GPDP", help='Algorithm: ["GPDP", "SGDQ", "derived", "IDM"], default:GPDP')
     parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
     parser.add_argument('--dataset_type', default='expert')
     parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')
@@ -248,7 +248,7 @@ if __name__ == '__main__':
         gpdp_results = np.load(_loaded_path+'.npz', allow_pickle=True)
         speed_plots.plot_speed_results(results=gpdp_results, density=_veh_density, label='Ours', color='blue')
 
-        speed_plots.show_plots()
+        speed_plots.show_plots(save_path=f'figures/speed_results_{args.eval_mode}.png')
 
     # ========== Results Plotting (Visualisation)
     if args.task == 'plot_action':
@@ -270,5 +270,5 @@ if __name__ == '__main__':
         _loaded_path += '_actions_collection'
         gpdp_results = np.load(_loaded_path+'.npy', allow_pickle=True)
         action_plots.plot_actions(results=gpdp_results, label='Ours')
-        action_plots.show_plots()
+        action_plots.show_plots(save_path=f'figures/action_distribution_{args.eval_mode}.png')
         
