@@ -4,7 +4,7 @@ from time import time, sleep
 # ========================================= My Modules ===========================================
 from environments.double_ring import DoubleRing
 from utilities import dataset_creation, evaluation, miscellaneous as misc, training
-from utilities import plot_results, plot_actions, record_gif
+from utilities import plot_results, plot_actions
 
 # ======================================== Other Modules =========================================
 from sys import platform

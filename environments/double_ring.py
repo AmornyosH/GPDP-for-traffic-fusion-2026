@@ -83,7 +83,7 @@ class DoubleRing:
                     'default_depart_lane_index': 0,
                     }
 
-    def reset(self, veh:object, num_veh:int=None, lane:int=None):
+    def reset(self, veh:object, num_veh:int=None, lane:int=None, imposter=None):
         '''
         Add the AV to the environment (SUMO) and perform run-in steps, which contain adding 
         all vehicles to the environment, and warming up, which allows the congestion to occur. 
