@@ -6,133 +6,173 @@ import random
 import torch
 import numpy as np
 
-def datasetCreation(env:object, num_data:int, type:str='expert'):
+
+def datasetCreation(env: object, num_data: int, type: str = 'expert'):
+    """
+    Collect offline dataset D = {o_n, a_n}^{N-1}_{n=0} of MDP transitions.
+
+    Paper Section V (Training Phase):
+      'expert'      — DerivedAV on outer lane (lane 0, optimal) for the first half,
+                      then DerivedAV on inner lane (lane 1, sub-optimal) for the second
+                      half.  Mixing optimal and sub-optimal trajectories from the same
+                      behaviour policy follows the dataset construction described in the
+                      paper.
+      'human'       — IDM only (human-driving baseline).
+      'human-expert'— DerivedAV (outer lane) for first half, IDM for second half.
+      'human-random'— IDM for first half, RandomAV for second half.
+
+    Each MDP transition stored: (o_t, a_t, r_{t+1}, o_{t+1}, truncated, terminated).
+    Vehicle density cycles through env.num_veh_config across trajectories so that
+    the dataset covers the full evaluation range [40, 42, 44, 46, 48] vehicles.
+
+    Args:
+        env       : DoubleRing environment object.
+        num_data  : Total number of transitions to collect (paper uses 10^6).
+        type      : Dataset type — see above.
+
+    Returns:
+        dict with keys: num_sample, observations, actions, rewards,
+                        next_observations, truncrated, terminations.
+    """
     horizon = env.params_dict['horizon']
-    # # Initialise vehicle's objects
-    # idm_agent = IDM(load=False, params_dict=env.params_dict, dataset=None, id='my_IDM')
-    # random_agent = RandomAV(load=False, params_dict=env.params_dict, dataset=None, id='my_Random')
 
-    # Initialise MDP transitions
-    observations_buffer = []
-    actions_buffer = []
-    rewards_buffer = []
-    next_observation_buffer = []
-    truncrated_buffer = []
-    termination_buffer = []
-    trajectory_count = 0  # Trajectory counter
-    # current_agent = 'IDM' # Default current agent is IDM.
-    lane = None
+    # MDP transition buffers
+    obs_buf       = []
+    act_buf       = []
+    rew_buf       = []
+    next_obs_buf  = []
+    truncated_buf = []
+    term_buf      = []
 
-    # Start
-    while len(observations_buffer) < num_data:
-        # Select the agent
-        idm_agent = IDM(load=False, params_dict=env.paramsDict(), dataset=None, id='my_IDM')
-        random_agent = RandomAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Random')
-        derived_agent = DerivedAV(load=False, params_dict=env.paramsDict(), dataset=None, id='my_Derived')
+    trajectory_count = 0
 
-        # We need to select the agent before reset the env. 
+    while len(obs_buf) < num_data:
+
+        # ------------------------------------------------------------------ #
+        # Select behaviour agent and depart lane for this trajectory.         #
+        # Paper: first half optimal (outer lane), second half sub-optimal     #
+        # (inner lane), both using the derived policy (Section V).            #
+        # ------------------------------------------------------------------ #
+        half = num_data // 2
+        collected = len(obs_buf)
+
         if type == 'expert':
-            agent = derived_agent
-            if len(observations_buffer) < (num_data // 2):
-                lane = 0
-            else:
-                lane = 1
-        elif type == 'human-expert':
-            # We need to select the agent before reset the env. 
-            if len(observations_buffer) < (num_data // 2):
-                agent = derived_agent
-                lane = 0
-            else:
-                agent = idm_agent
-                lane = 1
-
-        elif type == 'human-random':
-            # We need to select the agent before reset the env. 
-            if len(observations_buffer) < (num_data // 2):
-                # Start with IDM
-                agent = idm_agent
-            else:
-                agent = random_agent
+            agent = DerivedAV(load=False, params_dict=env.paramsDict(),
+                              dataset=None, id='my_Derived')
+            # First half: outer lane (lane=0) → higher speed → optimal actions.
+            # Second half: inner lane (lane=1) → lower speed → sub-optimal actions.
+            lane = 0 if collected < half else 1
 
         elif type == 'human':
-            agent = idm_agent
+            agent = IDM(load=False, params_dict=env.paramsDict(),
+                        dataset=None, id='my_IDM')
+            lane = None
 
-    # while len(observations_buffer) < num_data:
-        # # ========== Set global seed generator first. 
-        # seed = 2203 + (trajectory_count * 200)
-        # random.seed(seed)
-        # np.random.seed(seed=seed)
-        # torch.manual_seed(seed)
+        elif type == 'human-expert':
+            if collected < half:
+                agent = DerivedAV(load=False, params_dict=env.paramsDict(),
+                                  dataset=None, id='my_Derived')
+                lane = 0
+            else:
+                agent = IDM(load=False, params_dict=env.paramsDict(),
+                            dataset=None, id='my_IDM')
+                lane = None
 
-        # Initialise env.
-        _num_veh = env.num_veh_config[int(trajectory_count % len(env.num_veh_config))]  # define number of vehicles
-        agent.target_speed = (env.circumference - (env.veh_gap_dist*_num_veh/2)) / _num_veh
-        # print(agent.target_speed)
-        _ = env.reset(veh=agent, num_veh=_num_veh, lane=lane)
-        _truncrated = False
-        _termination = False
-        _accum_reward = 0
+        elif type == 'human-random':
+            if collected < half:
+                agent = IDM(load=False, params_dict=env.paramsDict(),
+                            dataset=None, id='my_IDM')
+            else:
+                agent = RandomAV(load=False, params_dict=env.paramsDict(),
+                                 dataset=None, id='my_Random')
+            lane = None
 
-        # Agent observation initial state
-        _observation = agent.getObservation()
+        else:
+            raise ValueError(
+                f"Unknown dataset type '{type}'. "
+                "Choose from ['expert', 'human', 'human-expert', 'human-random']."
+            )
 
-        # Loop
+        # ------------------------------------------------------------------ #
+        # Cycle vehicle density across num_veh_config so the dataset covers   #
+        # all evaluation densities: [40, 42, 44, 46, 48] veh.                #
+        # ------------------------------------------------------------------ #
+        num_veh = env.num_veh_config[trajectory_count % len(env.num_veh_config)]
+
+        # Reset: adds all vehicles, runs warmup (500 / δ steps) so congestion
+        # forms before data collection begins (follows paper Section V).
+        env.reset(veh=agent, num_veh=num_veh, lane=lane)
+
+        accum_reward = 0.0
+        obs = agent.getObservation()   # initial observation o_0
+
+        # ------------------------------------------------------------------ #
+        # Collect one trajectory of MDP transitions                           #
+        # (o_t, a_t, r_{t+1}, o_{t+1}).                                      #
+        # ------------------------------------------------------------------ #
         for t in range(horizon):
-            # Agent take action
-            _action = agent.actionPerform(state=_observation, lane_id=lane) 
-            # _action[0] += (0.05 * np.random.random())
-            
-            # Take a step in the environment and observes termination. 
-            _next_observation, _reward, _truncrated, _termination = env.step(veh=agent)
-            _accum_reward += _reward
-            # Check if this is the final timestep.
-            if t+1 >= horizon:
-                _truncrated = True
-                _termination = True # Set termination true just for now.
+            # Behaviour policy selects and applies action a_t.
+            # lane_id pins the agent to the designated lane for this trajectory.
+            action = agent.actionPerform(state=obs, lane_id=lane)
 
-            # Storing transitions
-            observations_buffer.append(_observation)
-            actions_buffer.append(_action)
-            rewards_buffer.append(_reward)
-            next_observation_buffer.append(_next_observation)
-            truncrated_buffer.append(_truncrated)
-            termination_buffer.append(_termination)
+            # Step environment → o_{t+1}, r_{t+1}
+            next_obs, reward, terminated, truncated = env.step(veh=agent)
+            accum_reward += reward
 
-            if len(observations_buffer) >= num_data:
+            # Mark the final transition of the trajectory.
+            if t + 1 >= horizon:
+                truncated  = True
+                terminated = True
+
+            obs_buf.append(obs)
+            act_buf.append(action)
+            rew_buf.append(reward)
+            next_obs_buf.append(next_obs)
+            truncated_buf.append(truncated)
+            term_buf.append(terminated)
+
+            if len(obs_buf) >= num_data:
                 break
 
-            # Assign new state
-            _observation = _next_observation
-        
-        # Count the trajectory
-        trajectory_count += 1
+            obs = next_obs
 
-        # Close the SUMO connection. (To not show error message)
+        trajectory_count += 1
         env.close()
 
-        # Print summary status.
-        print(f'{env.env_tag}', f'{agent.veh_tag}', 'Trajectory completed!', 
-                                                    ', Avg_raw_return: ', round(_accum_reward, 2),
-                                                    ', Num_vehicles: ', len(env.veh_id_list), 
-                                                    ', Depart_lane: ', _observation[1],
-                                                    ', Dataset_size: ', len(observations_buffer))
-        
-    # Contruct dataset dictionary.
-    _dataset = {'num_sample': len(observations_buffer),
-                'observations': np.vstack(observations_buffer).reshape(num_data, env.params_dict['observation_dim']), 
-                'actions': np.vstack(actions_buffer).reshape(num_data, env.params_dict['action_dim']), 
-                'rewards': np.vstack(rewards_buffer).reshape(num_data, 1),
-                'next_observations': np.vstack(next_observation_buffer).reshape(num_data, env.params_dict['observation_dim']), 
-                'truncrated': np.vstack(truncrated_buffer).reshape(num_data), 
-                'terminations': np.vstack(termination_buffer).reshape(num_data)}
+        print(
+            f'{env.env_tag} {agent.veh_tag}'
+            f'  traj {trajectory_count:4d}'
+            f' | num_veh: {num_veh:3d}'
+            f' | lane: {lane}'
+            f' | accum_reward: {accum_reward:8.2f}'
+            f' | collected: {len(obs_buf):7d} / {num_data}'
+        )
 
-    # Check shape of all transitions
-    print('Observations_buffer_shape: ', _dataset['observations'].shape)
-    print('Actions_buffer_shape: ', _dataset['actions'].shape)
-    print('Reward_buffer_shape: ', _dataset['rewards'].shape)
-    print('Next_observation_buffer_shape: ', _dataset['next_observations'].shape)
-    print('Truncrated_buffer_shape: ', _dataset['truncrated'].shape)
-    print('Termination_buffer_shape: ', _dataset['terminations'].shape)
+    # ---------------------------------------------------------------------- #
+    # Assemble dataset dictionary.                                            #
+    # Keys match what SGDP, miscellaneous.py, and the GP models expect.      #
+    # ---------------------------------------------------------------------- #
+    obs_dim = env.params_dict['observation_dim']
+    act_dim = env.params_dict['action_dim']
 
-    return _dataset
-    ...
+    dataset = {
+        'num_sample':        num_data,
+        'observations':      np.vstack(obs_buf[:num_data]).reshape(num_data, obs_dim),
+        'actions':           np.vstack(act_buf[:num_data]).reshape(num_data, act_dim),
+        'rewards':           np.array(rew_buf[:num_data], dtype=np.float32).reshape(num_data, 1),
+        'next_observations': np.vstack(next_obs_buf[:num_data]).reshape(num_data, obs_dim),
+        'truncrated':        np.array(truncated_buf[:num_data]),   # key kept as-is (used downstream)
+        'terminations':      np.array(term_buf[:num_data]),
+    }
+
+    print('\n--- Dataset Summary ---')
+    print(f"  type         : {type}")
+    print(f"  num_sample   : {dataset['num_sample']}")
+    print(f"  observations : {dataset['observations'].shape}")
+    print(f"  actions      : {dataset['actions'].shape}")
+    print(f"  rewards      : {dataset['rewards'].shape}")
+    print(f"  next_obs     : {dataset['next_observations'].shape}")
+    print(f"  truncrated   : {dataset['truncrated'].shape}")
+    print(f"  terminations : {dataset['terminations'].shape}")
+
+    return dataset
