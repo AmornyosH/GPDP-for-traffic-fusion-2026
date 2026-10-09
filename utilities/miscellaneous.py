@@ -1,4 +1,5 @@
 
+import json
 import numpy as np
 import torch
 import os
@@ -6,30 +7,82 @@ import os
 MISC_TAG = '(MISC) ----->'
 MISC_CAUTION_TAG = '(MISC) !!!!!>'
 
-# Paths Management Method
-def getPaths(operating_system:str, alg:str, env_name:str):
-    if operating_system == 'linux':
-        # Linux
-        dataset_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_dataset'.format(env_name)  
-        training_record_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_training_records'.format(alg, env_name) 
-        evaluation_path = '/home/amornyos/PhD/Packages/resources/datasets/{}_{}_evaluation_results'.format(alg, env_name) 
-    elif operating_system == 'win32':
-        # Windows
-        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
-            # This is my PC
-            dataset_path = 'C:/Amornyos/PhD/resources/T-ITS/datasets/{}_dataset'.format(env_name)
-            training_record_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
-            evaluation_path = 'C:/Amornyos/PhD/resources/T-ITS/training_records/{}_{}_evaluation_results'.format(alg, env_name)
-        elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
-            # This is Xingyu's PC.
-            dataset_path = 'C:/Users/AmornyosH/resources/T-ITS/datasets/{}_dataset'.format(env_name)
-            training_record_path = 'C:/Users/AmornyosH/resources/T-ITS/training_records/{}_{}_training_records'.format(alg, env_name)
-    elif operating_system == 'darwin':
-        # macOS
-        dataset_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_dataset.npz'.format(env_name)  
-        training_record_path = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets/{}_{}_training_records'.format(alg, env_name)
+_CONFIG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
 
-    return dataset_path, training_record_path, evaluation_path
+def _loadConfig() -> dict:
+    """Read config.json from the project root. Returns empty dict if missing."""
+    if os.path.isfile(_CONFIG_FILE):
+        with open(_CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+# Paths Management Method
+def getPaths(operating_system:str, alg:str, env_name:str,
+             dataset_path:str=None, train_path:str=None, eval_path:str=None):
+    """
+    Resolve the three resource paths used throughout the project.
+
+    Priority (highest → lowest):
+      1. CLI flags  (--dataset_path / --train_path / --eval_path)
+      2. config.json at the project root
+      3. Per-machine hardcoded defaults
+    """
+    cfg = _loadConfig()
+
+    # Merge: CLI flag beats config.json, config.json beats hardcoded default.
+    _dp_root = dataset_path or cfg.get('dataset_path') or None
+    _tp_root = train_path   or cfg.get('train_path')   or None
+    _ep_root = eval_path    or cfg.get('eval_path')    or None
+
+    # If all three roots are resolved (config or CLI), skip hardcoded defaults.
+    if _dp_root and _tp_root and _ep_root:
+        return (
+            os.path.join(_dp_root, '{}_dataset'.format(env_name)),
+            os.path.join(_tp_root, '{}_{}_training_records'.format(alg, env_name)),
+            os.path.join(_ep_root, '{}_{}_evaluation_results'.format(alg, env_name)),
+        )
+
+    # Hardcoded per-machine defaults.
+    if operating_system == 'linux':
+        _base = '/home/amornyos/PhD/Packages/resources/datasets'
+        _dp   = os.path.join(_base, '{}_dataset'.format(env_name))
+        _tp   = os.path.join(_base, '{}_{}_training_records'.format(alg, env_name))
+        _ep   = os.path.join(_base, '{}_{}_evaluation_results'.format(alg, env_name))
+    elif operating_system == 'win32':
+        if os.path.isdir('C:/Amornyos/PhD/resources/T-ITS'):
+            _ds = 'C:/Amornyos/PhD/resources/T-ITS/datasets'
+            _tr = 'C:/Amornyos/PhD/resources/T-ITS/training_records'
+        elif os.path.isdir('C:/Users/AmornyosH/resources/T-ITS'):
+            _ds = 'C:/Users/AmornyosH/resources/T-ITS/datasets'
+            _tr = 'C:/Users/AmornyosH/resources/T-ITS/training_records'
+        else:
+            raise RuntimeError(
+                'No default path found for this machine. '
+                'Fill in config.json at the project root, or pass '
+                '--dataset_path, --train_path and --eval_path.')
+        _dp = os.path.join(_ds, '{}_dataset'.format(env_name))
+        _tp = os.path.join(_tr, '{}_{}_training_records'.format(alg, env_name))
+        _ep = os.path.join(_tr, '{}_{}_evaluation_results'.format(alg, env_name))
+    elif operating_system == 'darwin':
+        _base = '/Users/amornyos/MHOO_on_MAC/PhD/Thesis/Resources/datasets'
+        _dp   = os.path.join(_base, '{}_dataset'.format(env_name))
+        _tp   = os.path.join(_base, '{}_{}_training_records'.format(alg, env_name))
+        _ep   = os.path.join(_base, '{}_{}_evaluation_results'.format(alg, env_name))
+    else:
+        raise RuntimeError(
+            f'Unsupported platform "{operating_system}". '
+            'Fill in config.json at the project root, or pass '
+            '--dataset_path, --train_path and --eval_path.')
+
+    # Partial overrides from config.json or CLI still apply.
+    if _dp_root:
+        _dp = os.path.join(_dp_root, '{}_dataset'.format(env_name))
+    if _tp_root:
+        _tp = os.path.join(_tp_root, '{}_{}_training_records'.format(alg, env_name))
+    if _ep_root:
+        _ep = os.path.join(_ep_root, '{}_{}_evaluation_results'.format(alg, env_name))
+
+    return _dp, _tp, _ep
 
 # Range Conversion Method
 def rangeConversion(input, new_min, new_max, old_min=-1, old_max=1) -> float:

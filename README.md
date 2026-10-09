@@ -89,15 +89,124 @@ $env:SUMO_HOME = "C:\Program Files (x86)\Eclipse\Sumo"
 
 ## Data & Output Paths
 
-The project stores datasets, training records, and evaluation results outside the repository. Default paths (configured in `utilities/miscellaneous.py`) are:
+Datasets, training records, and evaluation results are stored **outside** the repository.
 
-| Resource | Default path |
-|---|---|
-| Datasets | `C:/Amornyos/PhD/resources/T-ITS/datasets/` |
-| Training records | `C:/Amornyos/PhD/resources/T-ITS/training_records/` |
-| Evaluation results | `C:/Amornyos/PhD/resources/T-ITS/training_records/` |
+### Recommended: edit `config.json` once
 
-Adjust `getPaths()` in [utilities/miscellaneous.py](utilities/miscellaneous.py) if your directory layout differs.
+Fill in `config.json` at the project root **once** — every subsequent command picks it up automatically:
+
+```json
+{
+    "dataset_path": "/your/data/datasets",
+    "train_path":   "/your/data/training_records",
+    "eval_path":    "/your/data/evaluation_results"
+}
+```
+
+After that, all commands work with no extra flags:
+
+```bash
+python main.py --task dataset  --dataset_type expert
+python main.py --task training --alg SGDP
+python main.py --task testing  --alg SGDP --load
+```
+
+### Alternative: CLI flags (one-off override)
+
+Pass the flags directly to override `config.json` for a single run:
+
+```bash
+python main.py --task dataset \
+  --dataset_path /your/data/datasets \
+  --train_path   /your/data/training_records \
+  --eval_path    /your/data/evaluation_results
+```
+
+### Priority order
+
+```
+CLI flags  >  config.json  >  hardcoded defaults (miscellaneous.py)
+```
+
+The algorithm and environment names are appended automatically, e.g. `train_path: /data` → `/data/SGDP_double_ring_training_records.pth`.
+
+---
+
+## Dataset Collection
+
+The offline dataset **D = {o_n, a_n}^{N−1}_{n=0}** consists of MDP transitions collected by running the **DerivedAV (expert)** behaviour policy in SUMO, following the procedure in Section V of the paper.
+
+### Collection procedure
+
+1. **Warmup** — after all vehicles are deployed, the simulation runs for **500 / δ = 5 000 steps** (δ = 0.1 s) under IDM control so that stop-and-go congestion forms naturally before any data is recorded.
+
+2. **Trajectory rollout** — the DerivedAV then runs for **H = 1 000 / δ = 10 000 steps**, and every transition (o_t, a_t, r_{t+1}, o_{t+1}) is stored.
+
+3. **Optimal + sub-optimal mixing** — to expose the policy to the full action distribution, the dataset is split equally:
+   - **First half** — DerivedAV departs and stays in the **outer lane (lane 0)**, which yields higher average speed → *optimal* expert actions.
+   - **Second half** — DerivedAV departs and stays in the **inner lane (lane 1)**, which yields lower average speed → *sub-optimal* actions.
+
+   This mirrors the paper statement: *"We also mix the data in D with sub-optimal actions by running the derived policy in the inner lane of the system, which provides a lower speed than running the AV in the outer lane."*
+
+4. **Density coverage** — vehicle count cycles through **[40, 42, 44, 46, 48]** across trajectories so that the dataset covers the full evaluation density range.
+
+5. **Target size** — the paper uses **N = 10⁶** transitions. You can specify any size when prompted.
+
+### MDP observation vector (dim = 10)
+
+```
+o = [v_AV, l_AV, v_L, d_L, v_F, d_F, v_nL, d_nL, v_nF, d_nF]
+```
+
+| Index | Symbol | Description |
+|---|---|---|
+| 0 | v_AV | AV speed (m/s) |
+| 1 | l_AV | AV lane index (0 = outer, 1 = inner) |
+| 2 | v_L | Leader speed (m/s) |
+| 3 | d_L | Distance to leader (m) |
+| 4 | v_F | Follower speed (m/s) |
+| 5 | d_F | Distance to follower (m) |
+| 6 | v_nL | Neighbour-lane leader speed (m/s) |
+| 7 | d_nL | Distance to neighbour-lane leader (m) |
+| 8 | v_nF | Neighbour-lane follower speed (m/s) |
+| 9 | d_nF | Distance to neighbour-lane follower (m) |
+
+### Action encoding (dim = 2, diffusion space [−1, 1])
+
+The raw SUMO actions are encoded into the diffusion output space before storage:
+
+| Index | Raw space | Encoded space | Conversion |
+|---|---|---|---|
+| 0 | a_accel ∈ [−1.5, 1.0] m/s² | [−1, 1] | linear mapping |
+| 1 | a_lane ∈ {0, 1} | outer → +0.5, inner → −0.5 | Gaussian centred at ±0.5, σ = 0.005 |
+
+### Reward
+
+r_{t+1} = (v_AV + v_L + v_F + v_nL + v_nF) / (5 × v_max)
+
+Global average speed of the 5 observed vehicles, normalised by maximum speed (10 m/s).
+
+### Dataset types
+
+| `--dataset_type` | Behaviour policy | Notes |
+|---|---|---|
+| `expert` | DerivedAV (outer lane → inner lane) | Used in paper |
+| `human` | IDM only | Human-driving baseline |
+| `human-expert` | DerivedAV (first half) + IDM (second half) | Mixed |
+| `human-random` | IDM (first half) + RandomAV (second half) | Ablation |
+
+### Saved format
+
+`.npz` file with arrays:
+
+| Key | Shape | Description |
+|---|---|---|
+| `observations` | (N, 10) | o_t |
+| `actions` | (N, 2) | a_t (encoded) |
+| `rewards` | (N, 1) | r_{t+1} |
+| `next_observations` | (N, 10) | o_{t+1} |
+| `truncrated` | (N,) | trajectory boundary flag |
+| `terminations` | (N,) | episode termination flag |
 
 ---
 
@@ -111,9 +220,9 @@ All tasks are run through `main.py`. Global seed is fixed at `2203`.
 python main.py --task dataset --env double_ring --dataset_type expert
 ```
 
-- `--dataset_type`: `expert` (DerivedAV), `human` (IDM), or `human-expert` (mixed).
-- You will be prompted to enter the number of data points (e.g. `50000`).
-- Saves `<dataset_path>_<type>.npz` containing `observations`, `actions`, `rewards`, `next_observations`, `truncated`, `terminations`.
+- `--dataset_type`: `expert` (paper default), `human`, `human-expert`, or `human-random`.
+- You will be prompted to enter the number of data points (paper uses `1000000`).
+- Saves `<dataset_path>_<type>.npz`.
 
 ### 2. Train SGDP
 

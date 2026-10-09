@@ -83,6 +83,9 @@ if __name__ == '__main__':
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
     parser.add_argument('--render', action='store_true', help='render the simulation')
     parser.add_argument('--load', action='store_true')
+    parser.add_argument('--dataset_path', default=None, help='Override path for dataset directory (e.g. /data/datasets)')
+    parser.add_argument('--train_path', default=None, help='Override path for training records directory')
+    parser.add_argument('--eval_path', default=None, help='Override path for evaluation results directory')
     args = parser.parse_args()
 
     # ========== Define global constants
@@ -100,7 +103,9 @@ if __name__ == '__main__':
     env = DoubleRing(render=RENDERING, cond=args.eval_mode)  # Environment object
     
     # ---------- Define paths
-    dataset_path, training_record_path, evaluation_path = misc.getPaths(operating_system=platform, alg=args.alg, env_name=ENV_NAME)
+    dataset_path, training_record_path, evaluation_path = misc.getPaths(
+        operating_system=platform, alg=args.alg, env_name=ENV_NAME,
+        dataset_path=args.dataset_path, train_path=args.train_path, eval_path=args.eval_path)
 
     # ========== Check whether the dataset/replay_buffers is exist ?
     # !!!!!!!!!! The dataset or replay buffers are required to intialise the RL agent. 
