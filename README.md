@@ -256,8 +256,6 @@ Evaluation metric: **mean vehicle speed (km/h)** across 5 traffic density config
 
 ### Non-stationary traffic (shifted dynamics)
 
-![Speed results — shifted](figures/speed_results_shifted.png)
-
 An imposter vehicle suddenly slows to ~1.8 km/h at t = 200 s, introducing a distribution shift unseen during training.
 
 | Method | Avg all-vehicle speed (km/h) | Avg AV speed (km/h) |
@@ -274,8 +272,6 @@ An imposter vehicle suddenly slows to ~1.8 km/h at t = 200 s, introducing a dist
 
 ### Stationary traffic (standard dynamics)
 
-![Speed results — standard](figures/speed_results_standard.png)
-
 No dynamics shift; all vehicles follow their normal control algorithms throughout.
 
 | Method | Avg all-vehicle speed (km/h) |
@@ -288,8 +284,6 @@ No dynamics shift; all vehicles follow their normal control algorithms throughou
 - GPDP matches expert-level (DerivedAV) performance across all density configurations under normal conditions, confirming the behaviour-cloning objective is well satisfied.
 
 ### Action distributions (shifted dynamics)
-
-![Action distribution — shifted](figures/action_distribution_shifted.png)
 
 TRPO (left) concentrates actions in the upper region (a¹ ≈ +0.50, good under T_train) and fails to explore after the shift. GPDP (right) shifts mass toward the lower region (a¹ ≈ −0.50) after t = 200 s, recovering performance. Point colour encodes evaluation time; the red marker on the colourbar indicates the dynamics-shift time t = t′.
 
