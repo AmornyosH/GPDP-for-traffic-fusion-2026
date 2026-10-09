@@ -4,7 +4,7 @@ from time import time, sleep
 # ========================================= My Modules ===========================================
 from environments.double_ring import DoubleRing
 from utilities import dataset_creation, evaluation, miscellaneous as misc, training
-from utilities import plot_results, plot_actions
+from utilities import plot_results, plot_actions, record_gif
 
 # ======================================== Other Modules =========================================
 from sys import platform
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--env', default='double_ring', help='Environment: ["double_ring", "bottleneck", "intersection"], default:"double_ring"')
     parser.add_argument('--density', default=44, help='The density of the environment (number of vehicle), default:44')
     parser.add_argument('--alg', default="GPDP", help='Algorithm: ["GPDP", "derived", "IDM"], default:GPDP')
-    parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset"], default:training')
+    parser.add_argument('--task', default='testing', help='Task: ["training", "testing", "dataset", "record"], default:testing')
     parser.add_argument('--dataset_type', default='expert')
     parser.add_argument('--gradient_step', default=200000, help='Gradient Step, default:1000000')
     parser.add_argument('--eval_mode', default='standard', help='Evaluation mode: [standard, shifted], default:standard')
@@ -86,6 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_path', default=None, help='Override path for dataset directory (e.g. /data/datasets)')
     parser.add_argument('--train_path', default=None, help='Override path for training records directory')
     parser.add_argument('--eval_path', default=None, help='Override path for evaluation results directory')
+    parser.add_argument('--record_steps', default=500, type=int, help='Simulation steps to record for GIF, default:500')
     args = parser.parse_args()
 
     # ========== Define global constants
@@ -271,4 +272,15 @@ if __name__ == '__main__':
         gpdp_results = np.load(_loaded_path+'.npy', allow_pickle=True)
         action_plots.plot_actions(results=gpdp_results, label='Ours')
         action_plots.show_plots(save_path=f'figures/action_distribution_{args.eval_mode}.png')
-        
+
+    # ========== GIF Recording (Visualisation)
+    if args.task == 'record':
+        _gif_path = f'figures/simulation_{args.eval_mode}.gif'
+        record_gif.recordSimulationGif(
+            dataset=dataset,
+            num_veh=NUM_VEH,
+            save_path=_gif_path,
+            imposter=UNCERTAINTY,
+            record_steps=args.record_steps,
+        )
+

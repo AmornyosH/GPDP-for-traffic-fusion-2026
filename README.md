@@ -48,7 +48,8 @@ GPDP-for-traffic-fusion-2026/
     ├── MLP.py                     # 3-layer MLP (policy & value networks)
     ├── miscellaneous.py           # Path helpers, scaling, encoding
     ├── plot_results.py            # Speed vs. density result plots
-    └── plot_actions.py            # Action distribution visualisations
+    ├── plot_actions.py            # Action distribution visualisations
+    └── record_gif.py              # Capture sumo-gui frames → animated GIF
 ```
 
 ---
@@ -62,13 +63,14 @@ GPDP-for-traffic-fusion-2026/
 | `torch` | PyTorch ≥ 1.12 (GPU recommended for GP training) |
 | `numpy` | Array operations and dataset storage |
 | `matplotlib` | Result and action-distribution plots |
+| `Pillow` | GIF recording (`--task record`) |
 | `traci` | SUMO Python API (bundled with SUMO install) |
 | `sumolib` | SUMO utility library (bundled with SUMO install) |
 
 Install Python dependencies:
 
 ```bash
-pip install torch numpy matplotlib
+pip install torch numpy matplotlib Pillow
 ```
 
 ### SUMO
@@ -191,6 +193,22 @@ python main.py --task plot_action --dataset_type expert --eval_mode standard
 
 Produces scatter plots of longitudinal vs. lateral actions, comparing dataset actions, TRPO, and GPDP.
 
+### 6. Record simulation GIF
+
+```bash
+python main.py --task record --dataset_type expert --eval_mode standard --density 44
+```
+
+Opens `sumo-gui`, runs warmup, then captures frames and saves an animated GIF to `figures/simulation_standard.gif`. Use `--eval_mode shifted` to record the dynamics-shift scenario.
+
+| Argument | Default | Notes |
+|---|---|---|
+| `--density` | `44` | Number of vehicles |
+| `--eval_mode` | `standard` | `standard` or `shifted` |
+| `--record_steps` | `500` | Simulation steps to capture (50 s at 0.1 s/step) |
+
+Requires `Pillow` (`pip install Pillow`) and the SUMO `sumo-gui` binary.
+
 ---
 
 ## Environment: Double-Ring Road
@@ -219,6 +237,12 @@ Produces scatter plots of longitudinal vs. lateral actions, comparing dataset ac
 ---
 
 ## Results
+
+### Simulation
+
+![GPDP simulation — standard](figures/simulation_standard.gif)
+
+*Run `python main.py --task record --eval_mode standard` to regenerate.*
 
 Evaluation metric: **mean vehicle speed (km/h)** across 5 traffic density configurations {80, 84, 88, 92, 96} veh/km (corresponding to {40, 42, 44, 46, 48} vehicles on the 500 m double-ring road). All results are averaged over 10 trajectories with 10 random seeds.
 
