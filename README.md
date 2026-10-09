@@ -130,38 +130,6 @@ The algorithm and environment names are appended automatically, e.g. `train_path
 
 ---
 
-## Dataset Collection
-
-Run the following command to collect the offline dataset. You will be prompted to enter the number of transitions (the paper uses 1 000 000):
-
-```bash
-python main.py --task dataset --env double_ring --dataset_type expert
-```
-
-### Dataset types
-
-| `--dataset_type` | Behaviour policy | Notes |
-|---|---|---|
-| `expert` | DerivedAV (outer lane → inner lane) | Used in paper |
-| `human` | IDM only | Human-driving baseline |
-| `human-expert` | DerivedAV (first half) + IDM (second half) | Mixed |
-| `human-random` | IDM (first half) + RandomAV (second half) | Ablation |
-
-### Saved format
-
-`.npz` file with arrays:
-
-| Key | Shape | Description |
-|---|---|---|
-| `observations` | (N, 10) | o_t |
-| `actions` | (N, 2) | a_t (encoded) |
-| `rewards` | (N, 1) | r_{t+1} |
-| `next_observations` | (N, 10) | o_{t+1} |
-| `truncrated` | (N,) | trajectory boundary flag |
-| `terminations` | (N,) | episode termination flag |
-
----
-
 ## Usage
 
 All tasks are run through `main.py`. Global seed is fixed at `2203`.
